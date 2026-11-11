@@ -1,0 +1,9 @@
+# Local-only — never deployed
+arkaprava_cv.pdf
+serve.cmd
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/

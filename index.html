@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arkaprava Ghosh</title>
+  <meta name="description" content="Arkaprava Ghosh — Backend Engineer, AI & Automation. Portfolio." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FF1919'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='16' font-weight='700' fill='%23050508' text-anchor='middle'%3EAG%3C/text%3E%3C/svg%3E" />
+
+  <!-- Three.js import map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================
+       DESIGN TOKENS
+       ============================================ */
+    :root {
+      --color-bg:           #050508;
+      --color-bg-elevated:  #0f0f14;
+      --color-text:         #EBE8E0;
+      --color-text-muted:   #6B6860;
+      --color-accent:       #FF1919;
+      --color-accent-dim:   rgba(255, 25, 25, 0.15);
+      --color-cyan:         #00F3FF;
+      --color-border:       #1C1C22;
+
+      --font-display: 'Chakra Petch', 'Arial', sans-serif;
+      --font-mono:    'IBM Plex Mono', monospace;
+
+      --text-hero:    clamp(3rem, 11vw, 11rem);
+      --text-caption: 0.6rem;
+
+      --ease-out:     cubic-bezier(0.625, 0.05, 0, 1);
+      --ease-in-out:  cubic-bezier(0.87, 0, 0.13, 1);
+
+      --space-xs:  0.5rem;
+      --space-sm:  1rem;
+      --space-md:  2rem;
+      --space-lg:  4rem;
+
+      --gutter: clamp(1.5rem, 4vw, 4rem);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      overflow-x: clip;
+    }
+
+    body {
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-display);
+      font-weight: 400;
+      line-height: 1.5;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    *, *::before, *::after { cursor: none !important; }
+
+    a { color: inherit; text-decoration: none; }
+    ::selection { background: var(--color-accent); color: var(--color-bg); }
+
+    /* ============================================
+       GRAIN
+       ============================================ */
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.045;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 200px 200px;
+    }
+
+    /* ============================================
+       CURSOR
+       ============================================ */
+    .cursor {
+      position: fixed;
+      top: 0; left: 0;
+      width: 10px; height: 10px;
+      background: #ffffff;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+      transition: width 0.3s var(--ease-out), height 0.3s var(--ease-out);
+      will-change: transform;
+    }
+    .cursor.is-hovering { width: 40px; height: 40px; }
+
+    /* ============================================
+       LOADER + SLASH
+       ============================================ */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9997;
+      background: var(--color-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .loader-inner { display: flex; flex-direction: column; align-items: center; gap: 2.5rem; }
+    .loader-name { display: flex; flex-direction: column; align-items: center; line-height: 0.9; }
+    .loader-name-line {
+      display: block;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2.2rem, 9vw, 7rem);
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      color: var(--color-text);
+    }
+    .loader-name-line .char { display: inline-block; opacity: 0; transform: translateY(0.6em); animation: charIn 0.5s var(--ease-out) forwards; }
+    @keyframes charIn { to { opacity: 1; transform: translateY(0); } }
+    .loader-bottom { display: flex; flex-direction: column; gap: 1rem; width: clamp(200px, 30vw, 400px); }
+    .loader-counter {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      font-feature-settings: 'tnum';
+      align-self: flex-start;
+    }
+    .loader-track { width: 100%; height: 1px; background: var(--color-border); position: relative; overflow: hidden; }
+    .loader-fill { position: absolute; inset: 0; background: var(--color-accent); transform: scaleX(0); transform-origin: left center; }
+    .loader-tagline {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    #slash-overlay { position: fixed; inset: 0; z-index: 9998; pointer-events: none; display: none; }
+    .slash-half { position: absolute; top: 0; height: 100%; width: 50%; background: var(--color-accent); will-change: transform; }
+    #slash-left  { left: 0;  transform-origin: right center; }
+    #slash-right { right: 0; transform-origin: left center; }
+    #slash-seam {
+      position: absolute;
+      left: 50%; top: -5%; bottom: -5%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.9) 15%, #fff 50%, rgba(255,255,255,0.9) 85%, transparent 100%);
+      opacity: 0;
+    }
+
+    /* ============================================
+       WOLF MASK CANVAS
+       ============================================ */
+    #mask-canvas {
+      position: fixed;
+      top: 50%; left: 50%;
+      width: min(72vw, 72vh);
+      height: min(72vw, 72vh);
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* ============================================
+       HERO
+       ============================================ */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: var(--gutter);
+      padding-top: 0;
+      position: relative;
+      overflow: hidden;
+      background-color: var(--color-accent);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='65' height='65'%3E%3Cline x1='32' y1='27' x2='32' y2='37' stroke='black' stroke-width='0.8' opacity='0.12'/%3E%3Cline x1='27' y1='32' x2='37' y2='32' stroke='black' stroke-width='0.8' opacity='0.12'/%3E%3C/svg%3E");
+      background-size: 65px 65px;
+    }
+    .hero-hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: calc(var(--text-caption) * 2);
+      letter-spacing: 0.2em;
+      color: #000;
+      text-transform: uppercase;
+      padding: 1rem 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+      position: relative;
+      z-index: 1;
+    }
+    .hero-content { flex: 1; display: flex; flex-direction: column; gap: var(--space-sm); padding-top: var(--space-md); position: relative; z-index: 1; }
+    .hero-pre {
+      font-family: var(--font-mono);
+      font-size: calc(var(--text-caption) * 2);
+      letter-spacing: 0.25em;
+      color: #000;
+      text-transform: uppercase;
+    }
+    .hero-name { display: flex; flex-direction: column; line-height: 0.9; }
+    .hero-name-line {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: var(--text-hero);
+      letter-spacing: -0.02em;
+      color: #000;
+      text-transform: uppercase;
+      display: block;
+      will-change: clip-path, transform;
+    }
+    .hero-name-outline { -webkit-text-stroke: 2px #000; color: transparent; }
+    .hero-name-rule { height: 2px; background: #000; margin-left: calc(-1 * var(--gutter)); width: calc(100% + 2 * var(--gutter)); flex-shrink: 0; transform-origin: left center; }
+    .hero-info {
+      position: absolute;
+      top: 0; bottom: 0;
+      right: var(--gutter);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      gap: var(--space-sm);
+      padding-bottom: 5rem;
+      padding-left: var(--space-md);
+      border-left: 2px solid #000;
+      z-index: 1;
+    }
+    .hero-tagline { display: flex; flex-direction: column; align-items: flex-end; line-height: 0.92; }
+    .hero-tagline-line {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.8rem, 4.2vw, 4.6rem);
+      color: #000;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      text-align: right;
+    }
+    .hero-bio {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-family: var(--font-mono);
+      font-size: calc(var(--text-caption) * 2);
+      letter-spacing: 0.2em;
+      color: #000;
+      text-transform: uppercase;
+      line-height: 1.8;
+      text-align: right;
+      border-top: 1px solid rgba(0, 0, 0, 0.25);
+      padding-top: var(--space-sm);
+    }
+    .hero-bottom { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: var(--space-md); position: relative; z-index: 1; }
+    .hero-location { font-family: var(--font-mono); font-size: calc(var(--text-caption) * 2); letter-spacing: 0.2em; color: #000; text-transform: uppercase; }
+    .hero-scroll-hint { font-family: var(--font-mono); font-size: calc(var(--text-caption) * 2); letter-spacing: 0.25em; color: #000; text-transform: uppercase; display: flex; align-items: center; gap: 0.75rem; }
+    .hero-scroll-hint::after { content: ''; width: 64px; height: 1px; background: rgba(0,0,0,0.35); display: block; animation: hintPulse 2s infinite; }
+    @keyframes hintPulse { 0%,100% { transform: scaleX(0.4); transform-origin: left; } 50% { transform: scaleX(1); transform-origin: left; } }
+    .hero-divider { position: absolute; bottom: 0; left: var(--gutter); right: var(--gutter); height: 1px; background: rgba(0,0,0,0.2); transform-origin: left center; }
+
+    /* glitch chars */
+    .glitch-char { display: inline; transition: color 0.03s step-start; }
+
+    /* ============================================
+       SECTION SHARED
+       ============================================ */
+    .section-label { font-family: var(--font-mono); font-size: calc(var(--text-caption) * 2); letter-spacing: 0.25em; color: var(--color-accent); text-transform: uppercase; }
+    .section-sublabel { font-family: var(--font-mono); font-size: calc(var(--text-caption) * 2); letter-spacing: 0.2em; color: var(--color-text-muted); text-transform: uppercase; }
+
+    /* ============================================
+       EXPERIENCE
+       ============================================ */
+    #experience {
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--color-bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='65' height='65'%3E%3Cline x1='32' y1='27' x2='32' y2='37' stroke='%23FF1919' stroke-width='0.8' opacity='0.12'/%3E%3Cline x1='27' y1='32' x2='37' y2='32' stroke='%23FF1919' stroke-width='0.8' opacity='0.12'/%3E%3C/svg%3E");
+      background-size: 65px 65px;
+      padding: var(--space-lg) var(--gutter);
+      position: relative;
+      overflow: hidden;
+    }
+    .exp-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: var(--space-md); flex-shrink: 0; }
+    .exp-row {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--color-border);
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      transition: background 0.3s ease;
+      margin-left: calc(-1 * var(--gutter));
+      margin-right: calc(-1 * var(--gutter));
+      padding-left: var(--gutter);
+      padding-right: var(--gutter);
+    }
+    .exp-row:last-child { border-bottom: 1px solid var(--color-border); }
+    .exp-row:hover { background: rgba(255, 25, 25, 0.06); }
+    .exp-row.is-open { background: rgba(5, 5, 8, 0.72); }
+    .exp-row-main { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 0.6rem 1.2rem 0; user-select: none; }
+    .exp-left { display: flex; align-items: flex-start; gap: 1.4rem; }
+    .exp-left-text { display: flex; flex-direction: column; gap: 0.3rem; }
+    .exp-num { font-family: var(--font-mono); font-size: calc(var(--text-caption) * 2); letter-spacing: 0.2em; color: var(--color-text-muted); flex-shrink: 0; width: 2.5rem; }
+    .exp-company { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.4rem, 2.4vw, 2.6rem); letter-spacing: 0.04em; color: var(--color-text); text-transform: uppercase; transition: color 0.2s ease; line-height: 1; }
+    .exp-role { font-family: var(--font-mono); font-size: 1.25rem; letter-spacing: 0.06em; color: var(--color-text); text-transform: uppercase; transition: color 0.2s ease; }
+    .exp-right { display: flex; align-items: center; gap: 2rem; }
+    .exp-dates { font-family: var(--font-mono); font-size: 1.25rem; letter-spacing: 0.08em; color: var(--color-text); text-transform: uppercase; transition: color 0.2s ease; }
+    .exp-row:hover .exp-company, .exp-row:hover .exp-dates, .exp-row:hover .exp-role { color: var(--color-accent); }
+    .exp-toggle {
+      width: 2.2rem; height: 2.2rem;
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-text-muted);
+      font-family: var(--font-mono);
+      font-size: 1.2rem; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; padding: 0;
+      transition: border-color 0.2s ease, color 0.2s ease, transform 0.35s var(--ease-out);
+    }
+    .exp-toggle:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    .exp-row.is-open .exp-toggle { transform: rotate(45deg); border-color: var(--color-accent); color: var(--color-accent); }
+    .exp-details { max-height: 0; overflow: hidden; transition: max-height 0.5s var(--ease-in-out); display: flex; gap: 3rem; padding-left: calc(2.5rem + 1.4rem); padding-right: 0.6rem; }
+    .exp-row.is-open .exp-details { padding-bottom: 1.8rem; }
+    .exp-bullets { flex: 1; min-width: 0; }
+    .exp-intro { font-family: var(--font-mono); font-size: 1.2rem; line-height: 1.75; color: var(--color-text); letter-spacing: 0.03em; margin-bottom: 0.5rem; }
+    .exp-bullets ul { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .exp-bullets li { font-family: var(--font-mono); font-size: 1.2rem; line-height: 1.75; color: var(--color-text); letter-spacing: 0.03em; padding-left: 1.2em; position: relative; }
+    .exp-bullets li::before { content: '—'; position: absolute; left: 0; color: var(--color-accent); }
+    .exp-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-start; flex-shrink: 0; width: clamp(14rem, 24%, 24rem); border-left: 1px solid var(--color-border); padding-left: 2rem; }
+    .exp-pill { font-family: var(--font-mono); font-size: 1.05rem; letter-spacing: 0.1em; color: var(--color-text); border: 1px solid var(--color-border); padding: 0.3rem 0.7rem; text-transform: uppercase; transition: border-color 0.2s ease, color 0.2s ease; }
+    .exp-pill:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+    /* ============================================
+       EDUCATION · SKILLS · ACHIEVEMENTS
+       ============================================ */
+    #education { min-height: 100vh; box-sizing: border-box; display: flex; background: var(--color-bg); position: relative; transition: background-color 0.8s var(--ease-in-out); }
+    #education.is-inverted { background: #F5F2EB; }
+    #education.is-inverted .edu-left { border-right-color: #D0CCC2; }
+    #education.is-inverted .edu-institution { border-top-color: #D0CCC2; }
+    #education.is-inverted .edu-school-name,
+    #education.is-inverted .edu-degree,
+    #education.is-inverted .edu-inst-name,
+    #education.is-inverted .edu-inst-meta { color: #0A0A0E; }
+    #education.is-inverted .edu-achievements li { color: #5A5850; }
+    #education.is-inverted .skills-section { border-bottom-color: #D0CCC2; }
+    #education.is-inverted .skills-group-title { color: #5A5850; }
+    #education.is-inverted .skill-tag { color: #0A0A0E; border-color: #C0BDB6; }
+    #education.is-inverted .pub-entry { border-top-color: #D0CCC2; }
+    #education.is-inverted .pub-title { color: #0A0A0E; }
+    #education.is-inverted .pub-meta { color: #5A5850; }
+
+    .edu-left { width: 70%; border-right: 1px solid var(--color-border); padding: 0 var(--gutter); padding-top: var(--space-lg); display: flex; flex-direction: column; position: relative; z-index: 1; transition: border-color 0.8s var(--ease-in-out); }
+    .edu-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; padding-bottom: var(--space-md); }
+    .edu-institution { border-top: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: space-between; padding: 1.2rem 0; position: relative; transition: border-color 0.8s var(--ease-in-out); }
+    .edu-institution::before {
+      content: '';
+      position: absolute; top: 0; bottom: 0;
+      left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter));
+      background-color: var(--color-accent);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='65' height='65'%3E%3Cline x1='32' y1='27' x2='32' y2='37' stroke='black' stroke-width='0.8' opacity='0.12'/%3E%3Cline x1='27' y1='32' x2='37' y2='32' stroke='black' stroke-width='0.8' opacity='0.12'/%3E%3C/svg%3E");
+      background-size: 65px 65px;
+      opacity: 0;
+      transition: opacity 0.35s var(--ease-out);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .edu-institution:hover::before { opacity: 1; }
+    .edu-institution > * { position: relative; z-index: 1; }
+    .edu-institution--bits { flex: 5; }
+    .edu-institution--secondary { flex: 3; }
+    .edu-inst-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+    .edu-school-name { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.8rem, 3.8vw, 4.2rem); line-height: 0.92; letter-spacing: -0.02em; color: var(--color-text); text-transform: uppercase; }
+    .edu-degree { font-family: var(--font-mono); font-size: 1.1rem; letter-spacing: 0.08em; color: var(--color-text); text-transform: uppercase; text-align: right; }
+    .edu-institution:hover .edu-school-name,
+    .edu-institution:hover .edu-degree,
+    .edu-institution:hover .edu-inst-name,
+    .edu-institution:hover .edu-inst-meta,
+    .edu-institution:hover .edu-achievements li { color: #000; }
+    .edu-inst-name { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.05rem, 1.7vw, 1.8rem); color: var(--color-text); text-transform: uppercase; line-height: 1.1; }
+    .edu-inst-meta { font-family: var(--font-mono); font-size: calc(var(--text-caption) * 2); letter-spacing: 0.12em; color: var(--color-text); text-transform: uppercase; text-align: right; }
+    .edu-achievements { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; margin-top: 1rem; }
+    .edu-achievements li { font-family: var(--font-mono); font-size: 1.15rem; letter-spacing: 0.03em; color: var(--color-text-muted); text-transform: uppercase; padding-left: 1.4em; position: relative; line-height: 1.6; transition: color 0.2s ease; }
+    .edu-achievements li .bullet {
+      position: absolute;
+      left: 0;
+      top: 0.15em;
+      width: 1.2em;
+      height: 1.2em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-accent);
+      font-size: 0.8em;
+      transform-origin: center center;
+      will-change: transform;
+    }
+    .edu-institution:hover .edu-achievements li .bullet { color: #000; }
+
+    .edu-right { width: 30%; display: flex; flex-direction: column; position: relative; z-index: 1; }
+    .skills-section { flex: 3; padding: var(--space-lg) var(--gutter) var(--space-md); display: flex; flex-direction: column; gap: var(--space-md); border-bottom: 1px solid var(--color-border); position: relative; overflow: hidden; transition: border-color 0.8s var(--ease-in-out); }
+    .skills-section::before, .pub-section::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-color: var(--color-accent);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='65' height='65'%3E%3Cline x1='32' y1='27' x2='32' y2='37' stroke='black' stroke-width='0.8' opacity='0.12'/%3E%3Cline x1='27' y1='32' x2='37' y2='32' stroke='black' stroke-width='0.8' opacity='0.12'/%3E%3C/svg%3E");
+      background-size: 65px 65px;
+      opacity: 0;
+      transition: opacity 0.35s var(--ease-out);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .skills-section:hover::before, .pub-section:hover::before { opacity: 1; }
+    .skills-section > *, .pub-section > * { position: relative; z-index: 1; }
+    .skills-section:hover .skill-tag { color: #000; border-color: rgba(0,0,0,0.35); }
+    .skills-section:hover .section-label, .skills-section:hover .skills-group-title { color: #000; }
+    .skills-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .skills-group-title { font-family: var(--font-mono); font-size: calc(var(--text-caption) * 2); letter-spacing: 0.2em; color: var(--color-text-muted); text-transform: uppercase; }
+    .skills-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .skill-tag { font-family: var(--font-mono); font-size: 1rem; letter-spacing: 0.08em; color: var(--color-text); border: 1px solid var(--color-border); padding: 0.3rem 0.7rem; text-transform: uppercase; transition: border-color 0.2s ease, color 0.2s ease; }
+    .skill-tag:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+    .pub-section { flex: 2.4; padding: var(--space-md) var(--gutter); display: flex; flex-direction: column; gap: var(--space-md); position: relative; overflow: hidden; }
+    .pub-section:hover .section-label, .pub-section:hover .pub-title, .pub-section:hover .pub-meta { color: #000; }
+    .pub-entries { display: flex; flex-direction: column; gap: var(--space-sm); flex: 1; justify-content: center; }
+    .pub-entry { display: flex; flex-direction: column; gap: 0.25rem; border-top: 1px solid var(--color-border); padding-top: 0.7rem; transition: border-color 0.8s var(--ease-in-out); }
+    .pub-title { font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; letter-spacing: 0.03em; color: var(--color-text); text-transform: uppercase; line-height: 1.3; }
+    .pub-meta { font-family: var(--font-mono); font-size: calc(var(--text-caption) * 2); letter-spacing: 0.1em; color: var(--color-text-muted); text-transform: uppercase; }
+
+    /* ============================================
+       CONTACT
+       ============================================ */
+    #contact {
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: var(--space-lg) var(--gutter) calc(var(--space-md) * 1.5);
+      background: var(--color-bg);
+      position: relative;
+      overflow: hidden;
+      border-top: 1px solid var(--color-border);
+      gap: var(--space-md);
+    }
+    #asterisk-container { position: absolute; right: var(--gutter); top: 50%; transform: translateY(-50%); width: clamp(240px, 32vw, 480px); height: clamp(240px, 32vw, 480px); z-index: 1; }
+    #asterisk-canvas { display: block; width: 100%; height: 100%; }
+    .contact-heading { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    .contact-line { font-family: var(--font-display); font-weight: 700; font-size: var(--text-hero); line-height: 0.9; letter-spacing: -0.03em; text-transform: uppercase; color: var(--color-text); display: block; }
+    .contact-line--outline { color: transparent; -webkit-text-stroke: 1.5px var(--color-text); }
+    .contact-bottom { display: flex; flex-direction: column; gap: var(--space-md); flex-shrink: 0; }
+    .contact-info { display: flex; align-items: flex-end; justify-content: space-between; border-top: 1px solid var(--color-border); padding-top: var(--space-md); gap: var(--space-md); flex-wrap: wrap; }
+    .contact-details { display: flex; flex-direction: column; gap: 0.75rem; }
+    .contact-item { display: flex; align-items: baseline; gap: 1.5rem; }
+    .contact-item-label { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.2em; color: var(--color-text-muted); text-transform: uppercase; width: 4.5rem; flex-shrink: 0; }
+    .contact-item-value { font-family: var(--font-mono); font-size: clamp(0.85rem, 1.2vw, 1.05rem); letter-spacing: 0.06em; color: var(--color-text); text-transform: lowercase; transition: color 0.2s ease; }
+    .contact-item:hover .contact-item-value { color: var(--color-accent); }
+    .contact-socials { display: flex; align-items: center; gap: 1.5rem; }
+    .contact-social { display: flex; align-items: center; color: var(--color-text-muted); transition: color 0.3s ease, transform 0.25s var(--ease-out); }
+    .contact-social:hover { color: var(--color-text); transform: scale(1.15); }
+    .contact-social svg { display: block; }
+    .contact-footer { display: flex; justify-content: center; border-top: 1px solid var(--color-border); padding-top: var(--space-sm); }
+    .contact-footer span { font-family: var(--font-mono); font-size: var(--text-caption); letter-spacing: 0.2em; color: var(--color-text-muted); text-transform: uppercase; }
+
+    /* Contact — inverted (when education flips, contact flips too) */
+    #contact.is-inverted { background: #F5F2EB; border-top-color: #F5F2EB; }
+    #contact.is-inverted .section-label { color: var(--color-accent); }
+    #contact.is-inverted .contact-line { color: #0A0A0E; }
+    #contact.is-inverted .contact-line--outline { color: transparent; -webkit-text-stroke: 1.5px #0A0A0E; }
+    #contact.is-inverted .contact-info { border-top-color: #D0CCC2; }
+    #contact.is-inverted .contact-item-label { color: #8A8880; }
+    #contact.is-inverted .contact-item-value { color: #0A0A0E; }
+    #contact.is-inverted .contact-social { color: #8A8880; }
+    #contact.is-inverted .contact-social:hover { color: #0A0A0E; }
+    #contact.is-inverted .contact-footer { border-top-color: #D0CCC2; }
+    #contact.is-inverted .contact-footer span { color: #8A8880; }
+
+    /* ============================================
+       REVEAL
+       ============================================ */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out); }
+    .reveal.is-visible { opacity: 1; transform: none; }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 768px) {
+      body, *, *::before, *::after { cursor: auto !important; }
+      .cursor { display: none; }
+
+      .hero-hud > span:nth-child(1), .hero-hud > span:nth-child(2) { display: none; }
+      #hero { justify-content: flex-start; gap: var(--space-md); }
+      .hero-content { flex: 0 0 auto; padding-top: 0; }
+      .hero-name-line { font-size: clamp(2.6rem, 16vw, 5rem); }
+      .hero-info { position: static; flex-direction: row; justify-content: space-between; align-items: flex-start; border-left: none; border-top: 2px solid #000; padding: var(--space-sm) 0 0; gap: var(--space-md); margin-top: auto; }
+      .hero-pre { font-size: 0.68rem; letter-spacing: 0.1em; }
+      .hero-tagline { align-items: flex-start; }
+      .hero-tagline-line { text-align: left; font-size: clamp(1.6rem, 8vw, 2.6rem); }
+      .hero-bio { border-top: none; padding-top: 0; align-items: flex-start; text-align: left; font-size: 0.58rem; }
+      .hero-scroll-hint { display: none; }
+      #mask-canvas { width: min(78vw, 78vh); height: min(78vw, 78vh); }
+
+      .exp-header, .edu-header { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+      .exp-sublabel, .edu-sublabel { display: none; }
+      .exp-company { font-size: clamp(1.3rem, 5vw, 1.8rem); }
+      .exp-dates { display: none; }
+      .exp-role { font-size: 1rem; }
+      .exp-intro, .exp-bullets li { font-size: 1rem; }
+      .exp-details { flex-direction: column; gap: 1.2rem; padding-left: 0; padding-right: 0; }
+      .exp-pills { width: 100%; border-left: none; border-top: 1px solid var(--color-border); padding-left: 0; padding-top: 0.8rem; }
+
+      #education { flex-direction: column; }
+      .edu-left { width: 100%; border-right: none; border-bottom: 1px solid var(--color-border); }
+      .edu-right { width: 100%; }
+      .skills-section, .pub-section { flex: none; }
+      .edu-school-name { font-size: clamp(1.5rem, 7.5vw, 2.2rem); }
+      .edu-inst-meta, .edu-degree { text-align: left; }
+
+      #contact { justify-content: flex-start; }
+      #asterisk-container { position: relative; right: auto; top: auto; transform: none; width: clamp(260px, 80vw, 380px); height: clamp(260px, 80vw, 380px); margin: 0 auto; }
+      .contact-line { font-size: clamp(2.6rem, 15vw, 5rem); }
+      .contact-info { flex-direction: column; align-items: flex-start; }
+      .contact-socials { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+
+  <!-- Wolf mask canvas (fixed, centre) -->
+  <canvas id="mask-canvas" aria-hidden="true"></canvas>
+
+  <!-- Slash overlay -->
+  <div id="slash-overlay" aria-hidden="true">
+    <div class="slash-half" id="slash-left"></div>
+    <div class="slash-half" id="slash-right"></div>
+    <div id="slash-seam"></div>
+  </div>
+
+  <!-- ==================== LOADER ==================== -->
+  <div id="loader" role="status" aria-label="Loading">
+    <div class="loader-inner">
+      <div class="loader-name">
+        <span class="loader-name-line" data-text="ARKAPRAVA"></span>
+        <span class="loader-name-line" data-text="GHOSH"></span>
+      </div>
+      <div class="loader-bottom">
+        <span class="loader-counter" id="loader-counter">0%</span>
+        <div class="loader-track"><div class="loader-fill" id="loader-fill"></div></div>
+        <span class="loader-tagline">BACKEND ENGINEER · AI &amp; AUTOMATION</span>
+      </div>
+    </div>
+  </div>
+
+  <main id="main">
+
+    <!-- ==================== HERO ==================== -->
+    <section id="hero">
+      <div class="hero-hud">
+        <span>AG / PORTFOLIO</span>
+        <span>18.5204° N &nbsp;&nbsp;/&nbsp;&nbsp; 73.8567° E</span>
+        <span id="hud-clock"></span>
+      </div>
+
+      <div class="hero-content">
+        <p class="hero-pre">BACKEND ENGINEER &nbsp;/&nbsp; AI &amp; AUTOMATION &nbsp;/&nbsp; AKZONOBEL GBS</p>
+        <div class="hero-name" aria-label="Arkaprava Ghosh">
+          <span class="hero-name-line" id="hero-name-1">ARKAPRAVA</span>
+          <span class="hero-name-line hero-name-outline" id="hero-name-2">GHOSH</span>
+        </div>
+        <div class="hero-name-rule" aria-hidden="true"></div>
+      </div>
+
+      <div class="hero-info">
+        <div class="hero-tagline" aria-hidden="true">
+          <span class="hero-tagline-line" data-speed="0.7">ENGINEER.</span>
+          <span class="hero-tagline-line" data-speed="1.0">BUILDER.</span>
+          <span class="hero-tagline-line" data-speed="1.3">AUTOMATOR.</span>
+        </div>
+        <div class="hero-bio" aria-label="Background">
+          <span data-speed="1.4">AKZONOBEL</span>
+          <span data-speed="1.1">MOVEWORKS</span>
+          <span data-speed="0.9">AZURE</span>
+        </div>
+      </div>
+
+      <div class="hero-bottom">
+        <span class="hero-location">PUNE, IN — 2026</span>
+        <span class="hero-scroll-hint">SCROLL</span>
+      </div>
+      <div class="hero-divider" aria-hidden="true"></div>
+    </section>
+
+    <!-- ==================== EXPERIENCE ==================== -->
+    <section id="experience">
+      <div class="exp-header">
+        <span class="section-label">02 / EXPERIENCE</span>
+        <span class="section-sublabel">MY LIFE'S WORK (SO FAR)</span>
+      </div>
+
+      <div class="exp-list">
+
+        <div class="exp-row reveal">
+          <div class="exp-row-main">
+            <div class="exp-left">
+              <span class="exp-num">01</span>
+              <div class="exp-left-text">
+                <span class="exp-company">AKZONOBEL GBS</span>
+                <span class="exp-role">BACKEND ENGINEER · AI &amp; AUTOMATION</span>
+              </div>
+            </div>
+            <div class="exp-right">
+              <span class="exp-dates">JUL 2025 — PRESENT</span>
+              <button class="exp-toggle" aria-label="Expand AkzoNobel">+</button>
+            </div>
+          </div>
+          <div class="exp-details">
+            <div class="exp-bullets">
+              <p class="exp-intro">AI &amp; Automation Team · Pune, India:</p>
+              <ul>
+                <li>Developed and deployed enterprise chatbot solutions on the <strong>Moveworks</strong> platform, enabling automated self-service across IT, HR, and Finance workflows.</li>
+                <li>Built and maintained a <strong>Flask</strong> middleware layer — later ported to <strong>Azure Functions</strong> — bridging Moveworks and external enterprise systems.</li>
+                <li>Led integrations with <strong>ServiceNow</strong>, <strong>SailPoint</strong>, <strong>SharePoint</strong>, <strong>Power BI</strong> and <strong>Azure Active Directory</strong> over REST APIs, automating user provisioning, ticket creation and identity (IAM) workflows.</li>
+                <li>Modelled and queried <strong>PostgreSQL</strong> stores for workflow state and reporting.</li>
+                <li>Designed agentic chatbot behaviour patterns to handle multi-step automation flows end-to-end.</li>
+                <li>Collaborated with stakeholders across business units to translate requirements into chatbot-driven automation.</li>
+              </ul>
+            </div>
+            <div class="exp-pills">
+              <span class="exp-pill">PYTHON</span>
+              <span class="exp-pill">FLASK</span>
+              <span class="exp-pill">AZURE FUNCTIONS</span>
+              <span class="exp-pill">POSTGRESQL</span>
+              <span class="exp-pill">MOVEWORKS</span>
+              <span class="exp-pill">REST APIS</span>
+              <span class="exp-pill">SERVICENOW</span>
+              <span class="exp-pill">SHAREPOINT</span>
+              <span class="exp-pill">IAM</span>
+              <span class="exp-pill">POWER BI</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-row reveal">
+          <div class="exp-row-main">
+            <div class="exp-left">
+              <span class="exp-num">02</span>
+              <div class="exp-left-text">
+                <span class="exp-company">SELF-DIRECTED</span>
+                <span class="exp-role">BACKEND &amp; AUTOMATION PROJECTS</span>
+              </div>
+            </div>
+            <div class="exp-right">
+              <span class="exp-dates">2023 — 2025</span>
+              <button class="exp-toggle" aria-label="Expand projects">+</button>
+            </div>
+          </div>
+          <div class="exp-details">
+            <div class="exp-bullets">
+              <p class="exp-intro">Hands-on engineering while completing B.Tech CSE:</p>
+              <ul>
+                <li>Built REST backends and workflow automations with Python, Flask and FastAPI — focused on clean integration surfaces.</li>
+                <li>Practised data structures and algorithms extensively in C++ and Python.</li>
+                <li>Certified in SQL (HackerRank) and qualified GATE 2024.</li>
+              </ul>
+            </div>
+            <div class="exp-pills">
+              <span class="exp-pill">PYTHON</span>
+              <span class="exp-pill">FLASK</span>
+              <span class="exp-pill">FASTAPI</span>
+              <span class="exp-pill">SQL</span>
+              <span class="exp-pill">C++</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ EDUCATION · SKILLS · ACHIEVEMENTS ============ -->
+    <section id="education">
+
+      <div class="edu-left">
+        <div class="edu-header">
+          <span class="section-label">03 / EDUCATION</span>
+          <span class="section-sublabel">ORIGIN STORY</span>
+        </div>
+
+        <div class="edu-institution edu-institution--bits reveal">
+          <div class="edu-inst-top">
+            <h2 class="edu-school-name">COOCH BEHAR<br>GOVT. ENGG. COLLEGE</h2>
+            <p class="edu-degree">B.TECH COMPUTER SCIENCE &amp; ENGINEERING<br>2021 — 2025 &nbsp;·&nbsp; CGPA 8.39</p>
+          </div>
+          <ul class="edu-achievements">
+            <li><span class="bullet" aria-hidden="true">✦</span>SPECIALISED IN COMPUTER SCIENCE &amp; ENGINEERING</li>
+            <li><span class="bullet" aria-hidden="true">✦</span>GATE 2024 QUALIFIED</li>
+            <li><span class="bullet" aria-hidden="true">✦</span>MUSIC CLUB IN-CHARGE · MELODIES OF CGEC</li>
+          </ul>
+        </div>
+
+        <div class="edu-institution edu-institution--secondary reveal">
+          <div class="edu-inst-top">
+            <span class="edu-inst-name">ST. XAVIER'S INSTITUTION, KOLKATA</span>
+            <span class="edu-inst-meta">ISC (SCIENCE) · 89%<br>ICSE · 94.6%</span>
+          </div>
+          <ul class="edu-achievements">
+            <li><span class="bullet" aria-hidden="true">✦</span>COORDINATOR · MATH &amp; PHYSICS OLYMPIAD, ESPERANZA '24</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="edu-right">
+
+        <div class="skills-section">
+          <span class="section-label">04 / SKILLS</span>
+
+          <div class="skills-group">
+            <span class="skills-group-title">LANGUAGES</span>
+            <div class="skills-tags">
+              <span class="skill-tag">PYTHON</span>
+              <span class="skill-tag">C++</span>
+              <span class="skill-tag">SQL</span>
+            </div>
+          </div>
+
+          <div class="skills-group">
+            <span class="skills-group-title">FRAMEWORKS &amp; PLATFORMS</span>
+            <div class="skills-tags">
+              <span class="skill-tag">FLASK</span>
+              <span class="skill-tag">FASTAPI</span>
+              <span class="skill-tag">AZURE FUNCTIONS</span>
+              <span class="skill-tag">MOVEWORKS</span>
+              <span class="skill-tag">POSTGRESQL</span>
+              <span class="skill-tag">REST APIS</span>
+            </div>
+          </div>
+
+          <div class="skills-group">
+            <span class="skills-group-title">ENTERPRISE INTEGRATIONS</span>
+            <div class="skills-tags">
+              <span class="skill-tag">SERVICENOW</span>
+              <span class="skill-tag">SAILPOINT</span>
+              <span class="skill-tag">SHAREPOINT</span>
+              <span class="skill-tag">IAM</span>
+              <span class="skill-tag">AZURE AD</span>
+              <span class="skill-tag">POWER BI</span>
+            </div>
+          </div>
+
+          <div class="skills-group">
+            <span class="skills-group-title">TOOLS &amp; CONCEPTS</span>
+            <div class="skills-tags">
+              <span class="skill-tag">POSTMAN</span>
+              <span class="skill-tag">VS CODE</span>
+              <span class="skill-tag">AGENTIC AI</span>
+              <span class="skill-tag">WORKFLOW AUTOMATION</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pub-section">
+          <span class="section-label">05 / ACHIEVEMENTS &amp; LEADERSHIP</span>
+          <div class="pub-entries">
+            <div class="pub-entry">
+              <span class="pub-title">GATE 2024 Qualified</span>
+              <span class="pub-meta">GRADUATE APTITUDE TEST IN ENGINEERING</span>
+            </div>
+            <div class="pub-entry">
+              <span class="pub-title">HackerRank SQL (Basic) Certified</span>
+              <span class="pub-meta">CERTIFICATION</span>
+            </div>
+            <div class="pub-entry">
+              <span class="pub-title">IT Quiz Champion · Esperanza 3.0</span>
+              <span class="pub-meta">MAY 2022</span>
+            </div>
+            <div class="pub-entry">
+              <span class="pub-title">Music Club In-Charge · Melodies of CGEC</span>
+              <span class="pub-meta">Dhwani · Sargam · Live band shows — tech, promotions &amp; logistics</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== CONTACT ==================== -->
+    <section id="contact">
+      <span class="section-label">06 / CONTACT</span>
+
+      <div class="contact-heading">
+        <span class="contact-line">LET'S BUILD</span>
+        <span class="contact-line contact-line--outline">SOMETHING</span>
+      </div>
+
+      <div id="asterisk-container">
+        <canvas id="asterisk-canvas"></canvas>
+      </div>
+
+      <div class="contact-bottom">
+        <div class="contact-info">
+          <div class="contact-details">
+            <a href="mailto:arkapravaghosh6@gmail.com" class="contact-item">
+              <span class="contact-item-label">EMAIL</span>
+              <span class="contact-item-value">arkapravaghosh6@gmail.com</span>
+            </a>
+            <a href="tel:+919038481123" class="contact-item">
+              <span class="contact-item-label">PHONE</span>
+              <span class="contact-item-value">+91 903 8481 123</span>
+            </a>
+            <a href="https://www.linkedin.com/in/arkaprava-ghosh-58319a219/" target="_blank" rel="noopener" class="contact-item">
+              <span class="contact-item-label">LINKEDIN</span>
+              <span class="contact-item-value">linkedin.com/in/arkaprava-ghosh-58319a219</span>
+            </a>
+            <a href="https://leetcode.com/u/arko_codes/" target="_blank" rel="noopener" class="contact-item">
+              <span class="contact-item-label">LEETCODE</span>
+              <span class="contact-item-value">leetcode.com/u/arko_codes</span>
+            </a>
+          </div>
+          <div class="contact-socials">
+            <a href="https://www.linkedin.com/in/arkaprava-ghosh-58319a219/" target="_blank" rel="noopener" class="contact-social" aria-label="LinkedIn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a href="https://leetcode.com/u/arko_codes/" target="_blank" rel="noopener" class="contact-social" aria-label="LeetCode">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.483 0a1.374 1.374 0 0 0-.961.438L7.116 6.226l-3.854 4.126a5.266 5.266 0 0 0-1.209 2.104 5.35 5.35 0 0 0-.125.513 5.527 5.527 0 0 0 .062 2.362 5.83 5.83 0 0 0 .349 1.017 5.938 5.938 0 0 0 1.271 1.818l4.277 4.193.039.038c2.248 2.165 5.852 2.133 8.063-.074l2.396-2.392c.54-.54.54-1.414.003-1.955a1.378 1.378 0 0 0-1.951-.003l-2.396 2.392a3.021 3.021 0 0 1-4.205.038l-.02-.019-4.276-4.193c-.652-.64-.972-1.469-.948-2.263a2.68 2.68 0 0 1 .066-.523 2.545 2.545 0 0 1 .619-1.164L9.13 8.114c1.058-1.134 3.204-1.27 4.43-.278l3.501 2.831c.593.48 1.461.387 1.94-.207a1.384 1.384 0 0 0-.207-1.943l-3.5-2.831c-.8-.647-1.766-1.045-2.774-1.202l2.015-2.158a1.384 1.384 0 0 0-.001-1.948A1.38 1.38 0 0 0 13.483 0zm-2.866 12.815a1.38 1.38 0 0 0-1.38 1.382 1.38 1.38 0 0 0 1.38 1.382H20.79a1.38 1.38 0 0 0 1.38-1.382 1.38 1.38 0 0 0-1.38-1.382z"/></svg>
+            </a>
+            <a href="https://github.com/" target="_blank" rel="noopener" class="contact-social" aria-label="GitHub">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="contact-footer">
+          <span>CRAFTED WITH ❤️ | DEEPSEEK × OPENCODE</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Classic libs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { MeshoptDecoder } from 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/meshopt_decoder.module.js';
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    /* ============================================================
+       LOADER + SLASH
+       ============================================================ */
+    function initLoader(onComplete) {
+      document.querySelectorAll('.loader-name-line').forEach((line, li) => {
+        const text = line.getAttribute('data-text') || '';
+        line.innerHTML = '';
+        [...text].forEach((ch, i) => {
+          const span = document.createElement('span');
+          span.className = 'char';
+          span.textContent = ch;
+          span.style.animationDelay = (li * 0.25 + i * 0.04) + 's';
+          line.appendChild(span);
+        });
+      });
+
+      const fill = document.getElementById('loader-fill');
+      const counter = document.getElementById('loader-counter');
+      const loader = document.getElementById('loader');
+      let pct = 0;
+
+      const timer = setInterval(() => {
+        pct = Math.min(100, pct + Math.random() * 13 + 5);
+        fill.style.transform = 'scaleX(' + (pct / 100) + ')';
+        counter.textContent = Math.floor(pct) + '%';
+        if (pct >= 100) {
+          clearInterval(timer);
+          setTimeout(() => slashReveal(), 300);
+        }
+      }, 130);
+
+      function slashReveal() {
+        const overlay = document.getElementById('slash-overlay');
+        const left = document.getElementById('slash-left');
+        const right = document.getElementById('slash-right');
+        const seam = document.getElementById('slash-seam');
+
+        overlay.style.display = 'block';
+        gsap.set([left, right], { scaleX: 0, xPercent: 0 });
+        gsap.set(seam, { opacity: 0 });
+
+        const tl = gsap.timeline();
+        tl.to([left, right], { scaleX: 1, duration: 0.32, ease: 'power3.in' })
+          .to(seam, { opacity: 1, duration: 0.08 }, '-=0.04')
+          .add(() => {
+            // hero animates in as the halves part
+            loader.style.display = 'none';
+            document.body.style.overflow = '';
+            startReveals();
+            onComplete && onComplete();
+          })
+          .to(seam, { opacity: 0, duration: 0.25 }, '+=0.05')
+          .to(left,  { xPercent: -100, duration: 1.0, ease: 'power3.inOut' }, '-=0.2')
+          .to(right, { xPercent:  100, duration: 1.0, ease: 'power3.inOut' }, '<')
+          .set(overlay, { display: 'none' });
+      }
+    }
+
+    /* ============================================================
+       HERO — entrance + scroll parallax + Lenis
+       ============================================================ */
+    function initHero() {
+      const lenis = new Lenis({
+        duration: 1.2,
+        easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+      });
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add(time => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0);
+
+      const hud = document.querySelector('.hero-hud');
+      const pre = document.querySelector('.hero-pre');
+      const name1 = document.getElementById('hero-name-1');
+      const name2 = document.getElementById('hero-name-2');
+      const taglineLines = document.querySelectorAll('.hero-tagline-line');
+      const info = document.querySelector('.hero-info');
+      const bioSpans = document.querySelectorAll('.hero-bio span');
+      const bottom = document.querySelector('.hero-bottom');
+      const divider = document.querySelector('.hero-divider');
+
+      gsap.set([pre, name1, name2], { clipPath: 'inset(0 100% 0 0)' });
+      gsap.set([taglineLines, info, bioSpans, bottom], { opacity: 0 });
+      gsap.set(hud, { opacity: 0 });
+
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      tl.to(hud, { opacity: 1, duration: 0.8 })
+        .to(pre, { clipPath: 'inset(0 0% 0 0)', duration: 1.0 }, 0.1)
+        .to(name1, { clipPath: 'inset(0 0% 0 0)', duration: 1.4 }, 0.22)
+        .to(name2, { clipPath: 'inset(0 0% 0 0)', duration: 1.4 }, 0.38)
+        .to(taglineLines, { opacity: 1, duration: 0.7, stagger: 0.1 }, 0.6)
+        .to(info, { opacity: 1, duration: 1.0 }, 0.95)
+        .to(bioSpans, { opacity: 1, duration: 0.7, stagger: 0.1, ease: 'power2.out' }, 1.1)
+        .to(bottom, { opacity: 1, duration: 1.0 }, 1.1)
+        .fromTo(divider, { scaleX: 0 }, { scaleX: 1, duration: 1.4 }, 1.15);
+
+      // Scroll parallax
+      gsap.to(name1, { yPercent: -55, xPercent: -3, ease: 'none', scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1.4 } });
+      gsap.to(name2, { yPercent: -25, xPercent: 4, ease: 'none', scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1.4 } });
+      gsap.to(pre, { yPercent: 35, ease: 'none', scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1.0 } });
+
+      document.querySelectorAll('[data-speed]').forEach(el => {
+        const s = parseFloat(el.dataset.speed);
+        gsap.to(el, { yPercent: (1 - s) * 150, ease: 'none', scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1.6 } });
+      });
+
+      // Experience blood-red bleed
+      gsap.fromTo('#experience', { backgroundColor: '#050508' }, { backgroundColor: '#500b0d', ease: 'none', scrollTrigger: { trigger: '#experience', start: 'top bottom', end: 'top 30%', scrub: 1.5 } });
+      ScrollTrigger.create({
+        trigger: '#experience', start: 'top top',
+        onEnter: () => gsap.to('#experience', { backgroundColor: '#050508', duration: 1.5, ease: 'power2.inOut', overwrite: true }),
+        onLeaveBack: () => gsap.to('#experience', { backgroundColor: '#500b0d', duration: 0.5, ease: 'power2.out', overwrite: true }),
+      });
+    }
+
+    /* ============================================================
+       MASK — cat GLB, mouse-tracking, scroll exit, glitch swap
+       ============================================================ */
+    function initMask() {
+      const canvas = document.getElementById('mask-canvas');
+      if (!canvas) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+      camera.position.set(0, 0, 5.5);
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.4;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+      function syncSize() {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        if (!w || !h) return;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h, false);
+      }
+      syncSize();
+      new ResizeObserver(syncSize).observe(canvas);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+      const key = new THREE.DirectionalLight(0xffffff, 4); key.position.set(3, 4, 5); scene.add(key);
+      const rim = new THREE.DirectionalLight(0x99bbff, 2.5); rim.position.set(-4, 1, 2); scene.add(rim);
+      const red = new THREE.PointLight(0xff1919, 1.8, 12); red.position.set(0, -3, 3); scene.add(red);
+
+      let maskGroup = null, glitching = false;
+      const mouse = { x: 0, y: 0 };
+      const cur = { rx: 0, ry: 0 };
+      const MAX_RY = 0.52, MAX_RX = 0.28, LERP = 0.06;
+
+      window.addEventListener('mousemove', e => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+      });
+      window.addEventListener('touchmove', e => {
+        const t = e.touches[0];
+        mouse.x = (t.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = (t.clientY / window.innerHeight) * 2 - 1;
+      }, { passive: true });
+      window.addEventListener('touchend', () => { mouse.x = 0; mouse.y = 0; }, { passive: true });
+
+      function fitModel(group, targetSize) {
+        const box = new THREE.Box3().setFromObject(group);
+        const size = box.getSize(new THREE.Vector3());
+        const scale = targetSize / Math.max(size.x, size.y, size.z);
+        group.scale.setScalar(scale);
+        const center = box.getCenter(new THREE.Vector3());
+        group.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+      }
+
+      // Darken the mask without changing its shape/geometry.
+      // mode: 'black' | 'crimson' | 'restore'
+      function setMaskState(group, mode) {
+        group.traverse(child => {
+          if (!child.isMesh) return;
+          const m = child.material;
+          if (!m.userData.origColor) {
+            m.userData.origColor = m.color.clone();
+            m.userData.origEmissive = m.emissive ? m.emissive.clone() : null;
+            m.userData.origEmissiveIntensity = m.emissiveIntensity;
+          }
+          if (mode === 'restore') {
+            m.color.copy(m.userData.origColor);
+            if (m.emissive && m.userData.origEmissive) m.emissive.copy(m.userData.origEmissive);
+            m.emissiveIntensity = m.userData.origEmissiveIntensity;
+          } else if (mode === 'black') {
+            m.color.setRGB(0, 0, 0);
+            if (m.emissive) { m.emissive.setRGB(0, 0, 0); m.emissiveIntensity = 0; }
+          } else if (mode === 'crimson') {
+            m.color.setRGB(0.06, 0, 0);
+            if (m.emissive) { m.emissive.setHex(0xff1919); m.emissiveIntensity = 1.6; }
+          }
+          m.needsUpdate = true;
+        });
+      }
+
+      function glitchLoop() {
+        if (glitching) return;
+        glitching = true;
+        const holdMs = 300 + Math.random() * 450;
+        const mode = Math.random() < 0.5 ? 'black' : 'crimson'; // same shape, just darker
+        setMaskState(maskGroup, mode);
+        setTimeout(() => { setMaskState(maskGroup, 'restore'); glitching = false; }, holdMs);
+        setTimeout(glitchLoop, 12000 + Math.random() * 6000);
+      }
+
+      const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
+
+      loader.load('assets/models/mask.glb', gltf => {
+        maskGroup = gltf.scene;
+        fitModel(maskGroup, 2.4);
+        maskGroup.traverse(c => { if (c.isMesh) { c.material.transparent = true; c.material.opacity = 0; } });
+        scene.add(maskGroup);
+        setTimeout(() => {
+          maskGroup.traverse(c => { if (c.isMesh) gsap.to(c.material, { opacity: 1, duration: 1.4, ease: 'power2.out' }); });
+          setTimeout(glitchLoop, 5000);
+        }, 400);
+      }, undefined, err => console.warn('mask.glb failed:', err));
+
+      function tick() {
+        requestAnimationFrame(tick);
+        if (maskGroup) {
+          cur.ry += (mouse.x * MAX_RY - cur.ry) * LERP;
+          cur.rx += (mouse.y * MAX_RX - cur.rx) * LERP;
+          maskGroup.rotation.y = cur.ry;
+          maskGroup.rotation.x = cur.rx;
+        }
+        renderer.render(scene, camera);
+      }
+      tick();
+
+      gsap.set(canvas, { xPercent: -50, yPercent: -50, y: 0 });
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      gsap.to(canvas, {
+        y: -(window.innerHeight + 200), ease: 'none',
+        scrollTrigger: {
+          trigger: isMobile ? '#hero' : '#experience',
+          start: isMobile ? 'bottom 90%' : 'bottom 65%',
+          end: isMobile ? 'bottom 20%' : 'bottom top',
+          scrub: isMobile ? 0.8 : 1.5,
+        },
+      });
+    }
+
+    /* ============================================================
+       FLUID SIMULATION (Navier-Stokes) — cursor trails in education
+       Adapted from PavelDoGreat/WebGL-Fluid-Simulation (MIT)
+       ============================================================ */
+    function initFluid() {
+      const section = document.querySelector('#education');
+      if (!section) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;pointer-events:none;mix-blend-mode:difference;filter:blur(8px);';
+      section.prepend(canvas);
+
+      const SIM_RESOLUTION = 128, DYE_RESOLUTION = 1024;
+      const DENSITY_DISS = 1.2, VELOCITY_DISS = 0.4;
+      const PRESSURE_COEFF = 0.8, PRESSURE_ITERS = 20, CURL_STR = 18;
+      const isMobileDevice = window.matchMedia('(max-width: 768px)').matches;
+      const SPLAT_RADIUS = isMobileDevice ? 0.002 : 0.02;
+      const SPLAT_FORCE = 10000;
+
+      const ctxOpts = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false };
+      let gl = canvas.getContext('webgl2', ctxOpts);
+      const isWebGL2 = !!gl;
+      if (!isWebGL2) gl = canvas.getContext('webgl', ctxOpts) || canvas.getContext('experimental-webgl', ctxOpts);
+      if (!gl) { canvas.remove(); return; }
+
+      let halfFloat, supportLinearFiltering;
+      if (isWebGL2) {
+        gl.getExtension('EXT_color_buffer_float');
+        supportLinearFiltering = !!gl.getExtension('OES_texture_float_linear');
+      } else {
+        halfFloat = gl.getExtension('OES_texture_half_float');
+        supportLinearFiltering = !!gl.getExtension('OES_texture_half_float_linear');
+        if (!halfFloat) { canvas.remove(); return; }
+      }
+      const HALF_FLOAT = isWebGL2 ? gl.HALF_FLOAT : halfFloat.HALF_FLOAT_OES;
+
+      function supportsFBOFormat(iFmt, fmt, type) {
+        const t = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, iFmt, 4, 4, 0, fmt, type, null);
+        const fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+        return gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+      }
+      function getSupportedFormat(iFmt, fmt) {
+        if (!supportsFBOFormat(iFmt, fmt, HALF_FLOAT)) {
+          if (iFmt === gl.R16F) return getSupportedFormat(gl.RG16F, gl.RG);
+          if (iFmt === gl.RG16F) return getSupportedFormat(gl.RGBA16F, gl.RGBA);
+          return null;
+        }
+        return { internalFormat: iFmt, format: fmt };
+      }
+      let formatRGBA, formatRG, formatR;
+      if (isWebGL2) {
+        formatRGBA = getSupportedFormat(gl.RGBA16F, gl.RGBA);
+        formatRG = getSupportedFormat(gl.RG16F, gl.RG);
+        formatR = getSupportedFormat(gl.R16F, gl.RED);
+      } else {
+        formatRGBA = formatRG = formatR = { internalFormat: gl.RGBA, format: gl.RGBA };
+      }
+      if (!formatRGBA) { canvas.remove(); return; }
+
+      function compileShader(type, source, keywords) {
+        if (keywords) source = keywords.map(k => '#define ' + k).join('\n') + '\n' + source;
+        const s = gl.createShader(type);
+        gl.shaderSource(s, source);
+        gl.compileShader(s);
+        return s;
+      }
+      class Program {
+        constructor(vs, fs) {
+          this.program = gl.createProgram();
+          this.uniforms = {};
+          gl.attachShader(this.program, vs);
+          gl.attachShader(this.program, fs);
+          gl.linkProgram(this.program);
+          const n = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS);
+          for (let i = 0; i < n; i++) {
+            const info = gl.getActiveUniform(this.program, i);
+            this.uniforms[info.name] = gl.getUniformLocation(this.program, info.name);
+          }
+        }
+        bind() { gl.useProgram(this.program); }
+      }
+
+      const baseVS = compileShader(gl.VERTEX_SHADER, `
+        precision highp float;
+        attribute vec2 aPosition;
+        varying vec2 vUv;
+        varying vec2 vL; varying vec2 vR; varying vec2 vT; varying vec2 vB;
+        uniform vec2 texelSize;
+        void main () {
+          vUv = aPosition * 0.5 + 0.5;
+          vL = vUv - vec2(texelSize.x, 0.0);
+          vR = vUv + vec2(texelSize.x, 0.0);
+          vT = vUv + vec2(0.0, texelSize.y);
+          vB = vUv - vec2(0.0, texelSize.y);
+          gl_Position = vec4(aPosition, 0.0, 1.0);
+        }
+      `);
+      const clearProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision mediump float; precision mediump sampler2D;
+        varying highp vec2 vUv; uniform sampler2D uTexture; uniform float value;
+        void main () { gl_FragColor = value * texture2D(uTexture, vUv); }
+      `));
+      const displayProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision highp float; precision highp sampler2D;
+        varying vec2 vUv; uniform sampler2D uTexture;
+        void main () { float i = texture2D(uTexture, vUv).r; gl_FragColor = vec4(i, i, i, i); }
+      `));
+      const splatProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision highp float; precision highp sampler2D;
+        varying vec2 vUv;
+        uniform sampler2D uTarget; uniform float aspectRatio; uniform vec3 color; uniform vec2 point; uniform float radius;
+        void main () {
+          vec2 p = vUv - point.xy; p.x *= aspectRatio;
+          vec3 splat = exp(-dot(p, p) / radius) * color;
+          vec3 base = texture2D(uTarget, vUv).xyz;
+          gl_FragColor = vec4(base + splat, 1.0);
+        }
+      `));
+      const advectionProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision highp float; precision highp sampler2D;
+        varying vec2 vUv;
+        uniform sampler2D uVelocity; uniform sampler2D uSource;
+        uniform vec2 texelSize; uniform vec2 dyeTexelSize;
+        uniform float dt; uniform float dissipation;
+        vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
+          vec2 st = uv / tsize - 0.5; vec2 iuv = floor(st); vec2 fuv = fract(st);
+          vec4 a = texture2D(sam, (iuv + vec2(0.5, 0.5)) * tsize);
+          vec4 b = texture2D(sam, (iuv + vec2(1.5, 0.5)) * tsize);
+          vec4 c = texture2D(sam, (iuv + vec2(0.5, 1.5)) * tsize);
+          vec4 d = texture2D(sam, (iuv + vec2(1.5, 1.5)) * tsize);
+          return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+        }
+        void main () {
+        #ifdef MANUAL_FILTERING
+          vec2 coord = vUv - dt * bilerp(uVelocity, vUv, texelSize).xy * texelSize;
+          vec4 result = bilerp(uSource, coord, dyeTexelSize);
+        #else
+          vec2 coord = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize;
+          vec4 result = texture2D(uSource, coord);
+        #endif
+          float decay = 1.0 + dissipation * dt;
+          gl_FragColor = result / decay;
+        }
+      `, supportLinearFiltering ? null : ['MANUAL_FILTERING']));
+      const divergenceProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision mediump float; precision mediump sampler2D;
+        varying highp vec2 vUv; varying highp vec2 vL; varying highp vec2 vR; varying highp vec2 vT; varying highp vec2 vB;
+        uniform sampler2D uVelocity;
+        void main () {
+          float L = texture2D(uVelocity, vL).x; float R = texture2D(uVelocity, vR).x;
+          float T = texture2D(uVelocity, vT).y; float B = texture2D(uVelocity, vB).y;
+          vec2 C = texture2D(uVelocity, vUv).xy;
+          if (vL.x < 0.0) { L = -C.x; } if (vR.x > 1.0) { R = -C.x; }
+          if (vT.y > 1.0) { T = -C.y; } if (vB.y < 0.0) { B = -C.y; }
+          gl_FragColor = vec4(0.5 * (R - L + T - B), 0.0, 0.0, 1.0);
+        }
+      `));
+      const curlProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision mediump float; precision mediump sampler2D;
+        varying highp vec2 vUv; varying highp vec2 vL; varying highp vec2 vR; varying highp vec2 vT; varying highp vec2 vB;
+        uniform sampler2D uVelocity;
+        void main () {
+          float L = texture2D(uVelocity, vL).y; float R = texture2D(uVelocity, vR).y;
+          float T = texture2D(uVelocity, vT).x; float B = texture2D(uVelocity, vB).x;
+          gl_FragColor = vec4(0.5 * (R - L - T + B), 0.0, 0.0, 1.0);
+        }
+      `));
+      const vorticityProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision highp float; precision highp sampler2D;
+        varying vec2 vUv; varying vec2 vL; varying vec2 vR; varying vec2 vT; varying vec2 vB;
+        uniform sampler2D uVelocity; uniform sampler2D uCurl; uniform float curl; uniform float dt;
+        void main () {
+          float L = texture2D(uCurl, vL).x; float R = texture2D(uCurl, vR).x;
+          float T = texture2D(uCurl, vT).x; float B = texture2D(uCurl, vB).x;
+          float C = texture2D(uCurl, vUv).x;
+          vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
+          force /= length(force) + 0.0001; force *= curl * C; force.y *= -1.0;
+          vec2 vel = texture2D(uVelocity, vUv).xy;
+          gl_FragColor = vec4(vel + force * dt, 0.0, 1.0);
+        }
+      `));
+      const pressureProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision mediump float; precision mediump sampler2D;
+        varying highp vec2 vUv; varying highp vec2 vL; varying highp vec2 vR; varying highp vec2 vT; varying highp vec2 vB;
+        uniform sampler2D uPressure; uniform sampler2D uDivergence;
+        void main () {
+          float L = texture2D(uPressure, vL).x; float R = texture2D(uPressure, vR).x;
+          float T = texture2D(uPressure, vT).x; float B = texture2D(uPressure, vB).x;
+          float C = texture2D(uDivergence, vUv).x;
+          gl_FragColor = vec4((L + R + B + T - C) * 0.25, 0.0, 0.0, 1.0);
+        }
+      `));
+      const gradSubtractProg = new Program(baseVS, compileShader(gl.FRAGMENT_SHADER, `
+        precision mediump float; precision mediump sampler2D;
+        varying highp vec2 vUv; varying highp vec2 vL; varying highp vec2 vR; varying highp vec2 vT; varying highp vec2 vB;
+        uniform sampler2D uPressure; uniform sampler2D uVelocity;
+        void main () {
+          float L = texture2D(uPressure, vL).x; float R = texture2D(uPressure, vR).x;
+          float T = texture2D(uPressure, vT).x; float B = texture2D(uPressure, vB).x;
+          vec2 vel = texture2D(uVelocity, vUv).xy;
+          gl_FragColor = vec4(vel - vec2(R - L, T - B), 0.0, 1.0);
+        }
+      `));
+
+      const quadBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(0);
+
+      function blit(target) {
+        if (target) { gl.viewport(0, 0, target.width, target.height); gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo); }
+        else { gl.viewport(0, 0, canvas.width, canvas.height); gl.bindFramebuffer(gl.FRAMEBUFFER, null); }
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+      }
+
+      function createFBO(w, h, iFmt, fmt, type, filter) {
+        gl.activeTexture(gl.TEXTURE0);
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, iFmt, w, h, 0, fmt, type, null);
+        const fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        gl.viewport(0, 0, w, h);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        return { texture: tex, fbo, width: w, height: h, texelSizeX: 1 / w, texelSizeY: 1 / h,
+          attach(id) { gl.activeTexture(gl.TEXTURE0 + id); gl.bindTexture(gl.TEXTURE_2D, tex); return id; } };
+      }
+      function createDoubleFBO(w, h, iFmt, fmt, type, filter) {
+        let a = createFBO(w, h, iFmt, fmt, type, filter);
+        let b = createFBO(w, h, iFmt, fmt, type, filter);
+        return { width: w, height: h, texelSizeX: 1 / w, texelSizeY: 1 / h,
+          get read() { return a; }, get write() { return b; }, swap() { [a, b] = [b, a]; } };
+      }
+
+      let velocity, dye, pressure, divergence, curlFBO;
+      function getResolution(res) {
+        const aspect = canvas.width / canvas.height;
+        return aspect >= 1 ? { width: Math.round(res * aspect), height: res } : { width: res, height: Math.round(res / aspect) };
+      }
+      function initFramebuffers() {
+        const simRes = getResolution(SIM_RESOLUTION);
+        const dyeRes = getResolution(DYE_RESOLUTION);
+        const dyeFilter = supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
+        velocity = createDoubleFBO(simRes.width, simRes.height, formatRG.internalFormat, formatRG.format, HALF_FLOAT, gl.NEAREST);
+        dye = createDoubleFBO(dyeRes.width, dyeRes.height, formatRGBA.internalFormat, formatRGBA.format, HALF_FLOAT, dyeFilter);
+        pressure = createDoubleFBO(simRes.width, simRes.height, formatR.internalFormat, formatR.format, HALF_FLOAT, gl.NEAREST);
+        divergence = createFBO(simRes.width, simRes.height, formatR.internalFormat, formatR.format, HALF_FLOAT, gl.NEAREST);
+        curlFBO = createFBO(simRes.width, simRes.height, formatR.internalFormat, formatR.format, HALF_FLOAT, gl.NEAREST);
+      }
+      function resizeCanvas() {
+        const w = section.clientWidth, h = section.clientHeight;
+        if (canvas.width === w && canvas.height === h) return false;
+        canvas.width = w; canvas.height = h;
+        return true;
+      }
+      resizeCanvas();
+      initFramebuffers();
+
+      function correctRadius(r) {
+        const aspect = canvas.width / canvas.height;
+        if (aspect > 1) return r / aspect;
+        return r * aspect;
+      }
+      function splat(x, y, dx, dy, color) {
+        const aspect = canvas.width / canvas.height;
+        splatProg.bind();
+        gl.uniform1i(splatProg.uniforms.uTarget, velocity.read.attach(0));
+        gl.uniform1f(splatProg.uniforms.aspectRatio, aspect);
+        gl.uniform2f(splatProg.uniforms.point, x, y);
+        gl.uniform3f(splatProg.uniforms.color, dx, dy, 0.0);
+        gl.uniform1f(splatProg.uniforms.radius, correctRadius(SPLAT_RADIUS));
+        blit(velocity.write); velocity.swap();
+        gl.uniform1i(splatProg.uniforms.uTarget, dye.read.attach(0));
+        gl.uniform3f(splatProg.uniforms.color, color.r, color.g, color.b);
+        blit(dye.write); dye.swap();
+      }
+      function step(dt) {
+        gl.disable(gl.BLEND);
+        curlProg.bind();
+        gl.uniform2f(curlProg.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
+        gl.uniform1i(curlProg.uniforms.uVelocity, velocity.read.attach(0));
+        blit(curlFBO);
+        vorticityProg.bind();
+        gl.uniform2f(vorticityProg.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
+        gl.uniform1i(vorticityProg.uniforms.uVelocity, velocity.read.attach(0));
+        gl.uniform1i(vorticityProg.uniforms.uCurl, curlFBO.attach(1));
+        gl.uniform1f(vorticityProg.uniforms.curl, CURL_STR);
+        gl.uniform1f(vorticityProg.uniforms.dt, dt);
+        blit(velocity.write); velocity.swap();
+        divergenceProg.bind();
+        gl.uniform2f(divergenceProg.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
+        gl.uniform1i(divergenceProg.uniforms.uVelocity, velocity.read.attach(0));
+        blit(divergence);
+        clearProg.bind();
+        gl.uniform1i(clearProg.uniforms.uTexture, pressure.read.attach(0));
+        gl.uniform1f(clearProg.uniforms.value, PRESSURE_COEFF);
+        blit(pressure.write); pressure.swap();
+        pressureProg.bind();
+        gl.uniform2f(pressureProg.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
+        gl.uniform1i(pressureProg.uniforms.uDivergence, divergence.attach(0));
+        for (let i = 0; i < PRESSURE_ITERS; i++) {
+          gl.uniform1i(pressureProg.uniforms.uPressure, pressure.read.attach(1));
+          blit(pressure.write); pressure.swap();
+        }
+        gradSubtractProg.bind();
+        gl.uniform2f(gradSubtractProg.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
+        gl.uniform1i(gradSubtractProg.uniforms.uPressure, pressure.read.attach(0));
+        gl.uniform1i(gradSubtractProg.uniforms.uVelocity, velocity.read.attach(1));
+        blit(velocity.write); velocity.swap();
+        advectionProg.bind();
+        gl.uniform2f(advectionProg.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
+        if (!supportLinearFiltering) gl.uniform2f(advectionProg.uniforms.dyeTexelSize, velocity.texelSizeX, velocity.texelSizeY);
+        const vid = velocity.read.attach(0);
+        gl.uniform1i(advectionProg.uniforms.uVelocity, vid);
+        gl.uniform1i(advectionProg.uniforms.uSource, vid);
+        gl.uniform1f(advectionProg.uniforms.dt, dt);
+        gl.uniform1f(advectionProg.uniforms.dissipation, VELOCITY_DISS);
+        blit(velocity.write); velocity.swap();
+        if (!supportLinearFiltering) gl.uniform2f(advectionProg.uniforms.dyeTexelSize, dye.texelSizeX, dye.texelSizeY);
+        gl.uniform1i(advectionProg.uniforms.uVelocity, velocity.read.attach(0));
+        gl.uniform1i(advectionProg.uniforms.uSource, dye.read.attach(1));
+        gl.uniform1f(advectionProg.uniforms.dissipation, DENSITY_DISS);
+        blit(dye.write); dye.swap();
+      }
+      function render() {
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable(gl.BLEND);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        displayProg.bind();
+        gl.uniform1i(displayProg.uniforms.uTexture, dye.read.attach(0));
+        blit(null);
+      }
+
+      const pointer = { x: 0.5, y: 0.5, dx: 0, dy: 0, moved: false };
+      const MAX_DELTA = 0.012;
+      function updatePointer(clientX, clientY) {
+        const rect = section.getBoundingClientRect();
+        const nx = (clientX - rect.left) / rect.width;
+        const ny = 1.0 - (clientY - rect.top) / rect.height;
+        const aspect = canvas.width / canvas.height;
+        const rdx = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, nx - pointer.x));
+        const rdy = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, ny - pointer.y));
+        pointer.dx = rdx * SPLAT_FORCE;
+        pointer.dy = rdy * (aspect > 1 ? SPLAT_FORCE / aspect : SPLAT_FORCE);
+        pointer.x = nx; pointer.y = ny;
+        pointer.moved = Math.abs(rdx) > 0 || Math.abs(rdy) > 0;
+      }
+      function seedPointer(clientX, clientY) {
+        const rect = section.getBoundingClientRect();
+        pointer.x = (clientX - rect.left) / rect.width;
+        pointer.y = 1.0 - (clientY - rect.top) / rect.height;
+        pointer.dx = 0; pointer.dy = 0; pointer.moved = false;
+      }
+      section.addEventListener('mousemove', e => updatePointer(e.clientX, e.clientY));
+      window.addEventListener('touchstart', e => seedPointer(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+      window.addEventListener('touchmove', e => {
+        if (!isVisible) { seedPointer(e.touches[0].clientX, e.touches[0].clientY); return; }
+        updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      function randomColor() {
+        const h = Math.random();
+        const s = 0.9 + Math.random() * 0.1;
+        const v = 0.70 + Math.random() * 0.20;
+        const i = Math.floor(h * 6), f = h * 6 - i;
+        const p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
+        let r, g, b;
+        switch (i % 6) {
+          case 0: r=v; g=t; b=p; break;
+          case 1: r=q; g=v; b=p; break;
+          case 2: r=p; g=v; b=t; break;
+          case 3: r=p; g=q; b=v; break;
+          case 4: r=t; g=p; b=v; break;
+          case 5: r=v; g=p; b=q; break;
+        }
+        return { r, g, b };
+      }
+
+      let lastTime = performance.now();
+      let isVisible = false;
+      new IntersectionObserver(([entry]) => { isVisible = entry.isIntersecting; }, { threshold: 0.05 }).observe(section);
+
+      function tick(now) {
+        requestAnimationFrame(tick);
+        const dt = Math.min((now - lastTime) / 1000.0, 1 / 60);
+        lastTime = now;
+        if (!isVisible) return;
+        if (resizeCanvas()) initFramebuffers();
+        if (pointer.moved) { splat(pointer.x, pointer.y, pointer.dx, pointer.dy, randomColor()); pointer.moved = false; }
+        step(dt);
+        render();
+      }
+      requestAnimationFrame(tick);
+      // initial burst so there's something on screen
+      for (let i = 0; i < 6; i++) {
+        splat(Math.random(), Math.random(), 800 * (Math.random() - 0.5), 800 * (Math.random() - 0.5), randomColor());
+      }
+    }
+
+    /* ============================================================
+       ASTERISK — gloss-black 6-arm star, mouse displacement + spin
+       ============================================================ */
+    function initAsterisk() {
+      const container = document.getElementById('asterisk-container');
+      const canvas = document.getElementById('asterisk-canvas');
+      if (!container || !canvas) return;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+      camera.position.z = 5;
+      const scene = new THREE.Scene();
+
+      const extrudeOpts = { depth: 0.32, bevelEnabled: true, bevelThickness: 0.18, bevelSize: 0.14, bevelSegments: 14, steps: 1 };
+      const geo = new THREE.ExtrudeGeometry(buildStarShape(6, 0.24), extrudeOpts); geo.center(); geo.computeVertexNormals();
+      const altGeo = new THREE.ExtrudeGeometry(buildStarShape(4, 0.14), extrudeOpts); altGeo.center(); altGeo.computeVertexNormals();
+
+      const material = new THREE.MeshMatcapMaterial({ matcap: buildMatcap() });
+      let shaderRef = null;
+      const state = { hovered: 0 };
+      const mouseModel = new THREE.Vector3();
+
+      material.onBeforeCompile = shader => {
+        shader.uniforms.uMouse = { value: mouseModel };
+        shader.uniforms.uHovered = { value: 0.0 };
+        shader.vertexShader = 'uniform vec3 uMouse;\nuniform float uHovered;\n' + shader.vertexShader;
+        shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
+          vec3 transformed = position;
+          float _d = length(position.xy - uMouse.xy);
+          float _inf = smoothstep(1.15, 0.0, _d) * uHovered;
+          transformed += objectNormal * _inf * 0.42;
+        `);
+        shaderRef = shader;
+      };
+      material.needsUpdate = true;
+
+      const mesh = new THREE.Mesh(geo, material);
+      const altMesh = new THREE.Mesh(altGeo, material);
+      altMesh.visible = false;
+      const meshGroup = new THREE.Group();
+      meshGroup.add(mesh, altMesh);
+      scene.add(meshGroup);
+
+      const raycaster = new THREE.Raycaster();
+      const hitPlane = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide }));
+      scene.add(hitPlane);
+      const mouseNDC = new THREE.Vector2();
+
+      window.addEventListener('mousemove', e => {
+        const r = canvas.getBoundingClientRect();
+        const cx = r.left + r.width * 0.5, cy = r.top + r.height * 0.5;
+        const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+        const close = Math.max(0, 1 - dist / 400);
+        const hovered = 0.45 + close * 0.55;
+        mouseNDC.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+        mouseNDC.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+        gsap.to(state, { hovered, duration: 0.4, ease: 'power2.out', overwrite: true });
+      });
+      window.addEventListener('mouseleave', () => { gsap.to(state, { hovered: 0, duration: 1.2 }); mouseNDC.set(0, 0); });
+
+      function resize() {
+        const w = container.clientWidth, h = container.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      new ResizeObserver(resize).observe(container);
+      resize();
+
+      let visible = false;
+      new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.05 }).observe(container);
+
+      gsap.fromTo(container, { opacity: 0, scale: 0.82 }, { opacity: 1, scale: 1, duration: 1.1, ease: 'power3.out', scrollTrigger: { trigger: '#contact', start: 'top 70%' } });
+
+      let scrollRot = 0;
+      ScrollTrigger.create({ trigger: '#contact', start: 'top bottom', end: 'bottom top', onUpdate: self => { scrollRot = self.progress * Math.PI * 6; } });
+
+      let glitching = false;
+      function glitchLoop() {
+        if (!glitching && visible) {
+          glitching = true;
+          mesh.visible = false; altMesh.visible = true;
+          const holdMs = 300 + Math.random() * 400;
+          setTimeout(() => { altMesh.visible = false; mesh.visible = true; glitching = false; }, holdMs);
+        }
+        setTimeout(glitchLoop, 12000 + Math.random() * 6000);
+      }
+      setTimeout(glitchLoop, 6000);
+
+      let autoRotY = 0;
+      function tick(t) {
+        requestAnimationFrame(tick);
+        if (!visible) return;
+        const time = t * 0.001;
+        autoRotY += 0.004 - state.hovered * 0.003;
+        meshGroup.rotation.y = autoRotY + scrollRot;
+        meshGroup.rotation.x = Math.sin(time * 0.38) * 0.09;
+        raycaster.setFromCamera(mouseNDC, camera);
+        const hits = raycaster.intersectObject(hitPlane);
+        if (hits.length) mouseModel.copy(hits[0].point).applyMatrix4(meshGroup.matrixWorld.clone().invert());
+        if (shaderRef) {
+          shaderRef.uniforms.uMouse.value = mouseModel;
+          shaderRef.uniforms.uHovered.value = state.hovered;
+        }
+        renderer.render(scene, camera);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function buildStarShape(arms, ri) {
+      const shape = new THREE.Shape();
+      const pts = [];
+      for (let i = 0; i < arms * 2; i++) {
+        const angle = (i / (arms * 2)) * Math.PI * 2 - Math.PI / 2;
+        pts.push(new THREE.Vector2(Math.cos(angle) * (i % 2 === 0 ? 1.0 : ri), Math.sin(angle) * (i % 2 === 0 ? 1.0 : ri)));
+      }
+      shape.setFromPoints(pts);
+      return shape;
+    }
+    function buildMatcap() {
+      const sz = 512;
+      const c = document.createElement('canvas');
+      c.width = c.height = sz;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, sz, sz);
+      const g1 = ctx.createRadialGradient(sz * 0.28, sz * 0.22, 0, sz * 0.28, sz * 0.22, sz * 0.20);
+      g1.addColorStop(0, 'rgba(255,255,255,0.95)');
+      g1.addColorStop(0.6, 'rgba(140,140,150,0.20)');
+      g1.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g1; ctx.fillRect(0, 0, sz, sz);
+      const g2 = ctx.createRadialGradient(sz * 0.80, sz * 0.82, 0, sz * 0.80, sz * 0.82, sz * 0.25);
+      g2.addColorStop(0, 'rgba(55,55,65,0.5)');
+      g2.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g2; ctx.fillRect(0, 0, sz, sz);
+      return new THREE.CanvasTexture(c);
+    }
+
+    /* ============================================================
+       TEXT GLITCH — katakana + color flicker
+       ============================================================ */
+    const KATAKANA = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+    const GLITCH_COLORS = ['#00F3FF', '#FF1919', '#ffffff'];
+    const _seg = (typeof Intl !== 'undefined' && 'Segmenter' in Intl) ? new Intl.Segmenter('en', { granularity: 'grapheme' }) : null;
+    const rndKana = () => KATAKANA[Math.floor(Math.random() * KATAKANA.length)];
+    const graphemes = t => _seg ? [..._seg.segment(t)].map(s => s.segment) : [...t];
+
+    function wrapTextNodes(root) {
+      const state = { afterBreak: true };
+      function walk(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          let text = node.textContent.replace(/[\r\n]/g, '');
+          if (state.afterBreak) text = text.trimStart();
+          if (!text) { node.remove(); return; }
+          state.afterBreak = false;
+          const frag = document.createDocumentFragment();
+          graphemes(text).forEach(ch => {
+            if (ch === ' ' || ch === '\t') { frag.appendChild(document.createTextNode(ch)); return; }
+            const span = document.createElement('span');
+            span.className = 'glitch-char';
+            span.dataset.original = ch;
+            span.textContent = ch;
+            frag.appendChild(span);
+          });
+          node.replaceWith(frag);
+        } else if (node.nodeName === 'BR') {
+          state.afterBreak = true;
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.classList && node.classList.contains('glitch-char')) return;
+          if (node.dataset && node.dataset.noGlitch) return;
+          [...node.childNodes].forEach(walk);
+        }
+      }
+      [...root.childNodes].forEach(walk);
+    }
+    function splitIntoChars(el) {
+      if (el.dataset.glitchReady) return;
+      wrapTextNodes(el);
+      el.dataset.glitchReady = '1';
+    }
+    function applyGlitch(span, color, useKana) {
+      span.dataset.glitching = '1';
+      if (useKana) span.textContent = rndKana();
+      span.style.color = color;
+      span.style.webkitTextStroke = '0';
+      span.style.fontFamily = useKana ? 'serif' : '';
+    }
+    function restore(span) {
+      span.textContent = span.dataset.original;
+      span.style.color = '';
+      span.style.webkitTextStroke = '';
+      span.style.fontFamily = '';
+      delete span.dataset.glitching;
+    }
+    function pickColor(el, palette) {
+      const inverted = el.closest('.is-inverted');
+      const pool = inverted ? palette.filter(c => c !== '#ffffff') : palette;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+    function glitchBlock(el) {
+      const chars = [...el.querySelectorAll('.glitch-char')];
+      const eligible = chars.filter(c => c.dataset.original.trim() !== '');
+      if (eligible.length < 2) return;
+      const count = Math.floor(Math.random() * 4) + 2;
+      const start = Math.floor(Math.random() * Math.max(1, eligible.length - count));
+      const targets = eligible.slice(start, start + count);
+      const color = pickColor(el, GLITCH_COLORS);
+      targets.forEach(s => applyGlitch(s, color, true));
+      const holdMs = 80 + Math.random() * 160;
+      setTimeout(() => {
+        targets.forEach(restore);
+        if (Math.random() < 0.4) {
+          const micro = targets[Math.floor(Math.random() * targets.length)];
+          setTimeout(() => { applyGlitch(micro, '#00F3FF', true); setTimeout(() => restore(micro), 40 + Math.random() * 60); }, 30);
+        }
+      }, holdMs);
+    }
+    function colorFlicker(el) {
+      const chars = [...el.querySelectorAll('.glitch-char')];
+      const eligible = chars.filter(c => c.dataset.original.trim() !== '');
+      if (!eligible.length) return;
+      const target = eligible[Math.floor(Math.random() * eligible.length)];
+      applyGlitch(target, pickColor(target, ['#00F3FF', '#FF1919', '#ffffff', '#FFD700']), false);
+      setTimeout(() => restore(target), 60 + Math.random() * 120);
+    }
+    function isInViewport(el) {
+      const { top, bottom } = el.getBoundingClientRect();
+      return bottom > 0 && top < window.innerHeight;
+    }
+    function initSiteGlitch({ startDelay = 2200 } = {}) {
+      const SITE_SELECTORS = [
+        '.hero-pre', '.hero-name-line', '.hero-tagline-line', '.hero-bio span', '.hero-location', '.hero-hud span:not(#hud-clock)',
+        '.exp-num', '.exp-company', '.exp-role', '.exp-dates', '.exp-intro', '.exp-bullets li', '.exp-pill',
+        '.section-label', '.section-sublabel',
+        '.edu-school-name', '.edu-degree', '.edu-inst-name', '.edu-inst-meta', '.edu-achievements li',
+        '.skills-group-title', '.skill-tag', '.pub-title', '.pub-meta',
+        '.contact-line', '.contact-item-label', '.contact-item-value', '.contact-footer span',
+      ];
+      const seen = new Set(); const els = [];
+      SITE_SELECTORS.forEach(sel => document.querySelectorAll(sel).forEach(el => { if (!seen.has(el)) { seen.add(el); els.push(el); } }));
+      els.forEach(splitIntoChars);
+
+      const loop = () => {
+        const visible = els.filter(isInViewport);
+        if (visible.length) {
+          const pool = visible.flatMap((el, i) => Array(Math.max(1, visible.length - i)).fill(el));
+          const el = pool[Math.floor(Math.random() * pool.length)];
+          if (Math.random() < 0.72) glitchBlock(el); else colorFlicker(el);
+          if (Math.random() < 0.3) {
+            const el2 = visible[Math.floor(Math.random() * visible.length)];
+            setTimeout(() => colorFlicker(el2), 80 + Math.random() * 120);
+          }
+        }
+        setTimeout(loop, 1400 + Math.random() * 1400);
+      };
+      setTimeout(loop, startDelay);
+    }
+
+    /* ============================================================
+       SCROLL REVEALS
+       ============================================================ */
+    let _observer = null;
+    function startReveals() {
+      _observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) { entry.target.classList.add('is-visible'); _observer.unobserve(entry.target); }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(el => _observer.observe(el));
+    }
+
+    /* ============================================================
+       MISC — clock, cursor, accordion, invert
+       ============================================================ */
+    (function clock() {
+      const el = document.getElementById('hud-clock');
+      if (!el) return;
+      const tick = () => {
+        const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(new Date());
+        const get = t => parts.find(p => p.type === t).value;
+        el.textContent = get('hour') + ':' + get('minute') + ':' + get('second') + ' IST';
+      };
+      tick(); setInterval(tick, 1000);
+    })();
+
+    (function cursor() {
+      const c = document.getElementById('cursor');
+      if (!c) return;
+      document.addEventListener('mousemove', e => { c.style.left = e.clientX + 'px'; c.style.top = e.clientY + 'px'; });
+      document.querySelectorAll('a, button, .exp-row').forEach(el => {
+        el.addEventListener('mouseenter', () => c.classList.add('is-hovering'));
+        el.addEventListener('mouseleave', () => c.classList.remove('is-hovering'));
+      });
+    })();
+
+    document.querySelectorAll('.exp-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const isOpen = row.classList.contains('is-open');
+        document.querySelectorAll('.exp-row').forEach(r => { r.classList.remove('is-open'); r.querySelector('.exp-details').style.maxHeight = null; });
+        if (!isOpen) {
+          row.classList.add('is-open');
+          const d = row.querySelector('.exp-details');
+          d.style.maxHeight = d.scrollHeight + 40 + 'px';
+        }
+      });
+    });
+
+    /* ============================================================
+       EDUCATION / SKILLS — reveals, Ken Burns, skill-tag wave
+       ============================================================ */
+    function initEducation() {
+      const eduSection = document.querySelector('#education');
+      const contactSection = document.querySelector('#contact');
+
+      // Invert education + contact together
+      ScrollTrigger.create({
+        trigger: '#contact', start: 'top 50%', end: 'bottom top',
+        onEnter: () => { eduSection && eduSection.classList.add('is-inverted'); contactSection && contactSection.classList.add('is-inverted'); },
+        onLeaveBack: () => { eduSection && eduSection.classList.remove('is-inverted'); contactSection && contactSection.classList.remove('is-inverted'); },
+      });
+
+      // School name wipe
+      gsap.fromTo('.edu-school-name', { clipPath: 'inset(0 100% 0 0)' }, {
+        clipPath: 'inset(0 0% 0 0)', duration: 1.1, ease: 'power3.out',
+        scrollTrigger: { trigger: '#education', start: 'top 80%' },
+      });
+
+      // Header + degree + achievements stagger
+      gsap.fromTo(['.edu-header', '.edu-degree', '.edu-achievements li'], { autoAlpha: 0, y: 16 }, {
+        autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.07, ease: 'power2.out',
+        scrollTrigger: { trigger: '#education', start: 'top 70%' },
+      });
+
+      // Right column
+      gsap.fromTo(['.skills-section', '.pub-section'], { autoAlpha: 0, x: 20 }, {
+        autoAlpha: 1, x: 0, duration: 0.7, stagger: 0.15, ease: 'power2.out',
+        scrollTrigger: { trigger: '#education', start: 'top 70%' },
+      });
+
+      // Skill tags pop in
+      gsap.fromTo('.skill-tag', { autoAlpha: 0, scale: 0.9 }, {
+        autoAlpha: 1, scale: 1, duration: 0.4, stagger: 0.03, ease: 'power2.out',
+        scrollTrigger: { trigger: '#education', start: 'top 60%' },
+      });
+
+      const mm = gsap.matchMedia();
+
+      mm.add('(min-width: 769px)', () => {
+        // School name Ken Burns + degree counter-drift
+        gsap.fromTo('.edu-school-name', { yPercent: 55, scale: 1.40 }, {
+          yPercent: -30, scale: 1.00, ease: 'none',
+          scrollTrigger: { trigger: '#education', start: 'top bottom', end: 'bottom top', scrub: 1.0 },
+        });
+        gsap.fromTo('.edu-degree', { yPercent: -45 }, {
+          yPercent: 45, ease: 'none',
+          scrollTrigger: { trigger: '#education', start: 'top bottom', end: 'bottom top', scrub: 1.0 },
+        });
+
+        // Secondary institutions counter-drift
+        gsap.utils.toArray('.edu-institution--secondary').forEach((inst, i) => {
+          const name = inst.querySelector('.edu-inst-name');
+          const meta = inst.querySelector('.edu-inst-meta');
+          if (name) gsap.fromTo(name, { yPercent: 35 + i * 12, scale: 1.18 }, {
+            yPercent: -(25 + i * 8), scale: 1.00, ease: 'none',
+            scrollTrigger: { trigger: inst, start: 'top bottom', end: 'bottom top', scrub: 1.2 + i * 0.2 },
+          });
+          if (meta) gsap.fromTo(meta, { yPercent: -(25 + i * 8) }, {
+            yPercent: 25 + i * 8, ease: 'none',
+            scrollTrigger: { trigger: inst, start: 'top bottom', end: 'bottom top', scrub: 1.0 + i * 0.2 },
+          });
+        });
+
+        // Revolving ✦ bullets
+        gsap.utils.toArray('.edu-achievements .bullet').forEach((b, i) => {
+          gsap.fromTo(b, { rotation: 0 }, {
+            rotation: 720, ease: 'none',
+            scrollTrigger: { trigger: b.closest('.edu-institution'), start: 'top bottom', end: 'bottom top', scrub: 1.5 + (i % 3) * 0.3 },
+          });
+        });
+
+      });
+
+      mm.add('(max-width: 768px)', () => {
+        gsap.fromTo('.edu-school-name', { yPercent: 20, scale: 1.12 }, {
+          yPercent: -10, scale: 1.00, ease: 'none',
+          scrollTrigger: { trigger: '#education', start: 'top bottom', end: 'bottom top', scrub: 1.2 },
+        });
+        gsap.utils.toArray('.edu-achievements .bullet').forEach((b, i) => {
+          gsap.fromTo(b, { rotation: 0 }, {
+            rotation: 720, ease: 'none',
+            scrollTrigger: { trigger: b.closest('.edu-institution'), start: 'top bottom', end: 'bottom top', scrub: 1.5 + (i % 3) * 0.3 },
+          });
+        });
+      });
+    }
+
+    /* ============================================================
+       CONTACT — reveals, heading scissor, asterisk float
+       ============================================================ */
+    function initContact() {
+      const section = document.querySelector('#contact');
+      if (!section) return;
+
+      gsap.fromTo('.contact-line', { clipPath: 'inset(0 100% 0 0)' }, {
+        clipPath: 'inset(0 0% 0 0)', duration: 1.2, ease: 'power3.out', stagger: 0.15,
+        scrollTrigger: { trigger: '#contact', start: 'top 75%' },
+      });
+
+      gsap.fromTo('#contact .section-label', { autoAlpha: 0, y: 12 }, {
+        autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out',
+        scrollTrigger: { trigger: '#contact', start: 'top 80%' },
+      });
+
+      gsap.fromTo(['#contact .contact-item', '#contact .contact-social', '#contact .contact-footer'], { autoAlpha: 0, y: 16 }, {
+        autoAlpha: 1, y: 0, duration: 0.55, stagger: 0.08, ease: 'power2.out',
+        scrollTrigger: { trigger: '#contact', start: 'top 60%' },
+      });
+
+      const mm = gsap.matchMedia();
+      mm.add('(min-width: 769px)', () => {
+        gsap.fromTo('.contact-line:not(.contact-line--outline)', { xPercent: 0 }, {
+          xPercent: 7, ease: 'none',
+          scrollTrigger: { trigger: '#contact', start: 'top 80%', end: 'bottom bottom', scrub: 1.4 },
+        });
+        gsap.fromTo('.contact-line--outline', { xPercent: 18 }, {
+          xPercent: 5, ease: 'none',
+          scrollTrigger: { trigger: '#contact', start: 'top 80%', end: 'bottom bottom', scrub: 1.4 },
+        });
+        gsap.to('#asterisk-container', {
+          yPercent: -22, ease: 'none',
+          scrollTrigger: { trigger: '#contact', start: 'top bottom', end: 'bottom top', scrub: 1.6 },
+        });
+      });
+    }
+
+    /* ============================================================
+       SKILL-TAG WAVE — scroll-driven drift, framerate independent
+       ============================================================ */
+    function initSkillWave() {
+      const section = document.querySelector('.skills-section');
+      const tags = [...document.querySelectorAll('.skill-tag')];
+      if (!section || !tags.length) return;
+
+      // Deterministic per-tag speed so tags shear past each other (the "tilt" look)
+      const travels = tags.map((t, i) => {
+        const speed = 0.6 + ((i * 37) % 100) / 125; // 0.6 .. 1.39
+        return (1 - speed) * 120;
+      });
+
+      const update = () => {
+        const r = section.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const p = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
+        for (let i = 0; i < tags.length; i++) {
+          gsap.set(tags[i], { y: travels[i] * (1 - 2 * p) });
+        }
+      };
+
+      gsap.ticker.add(update);
+      window.addEventListener('resize', update);
+      update();
+    }
+
+    /* ============================================================
+       BOOT
+       ============================================================ */
+    document.body.style.overflow = 'hidden';
+    initLoader(() => {
+      initHero();
+      initMask();
+      initEducation();
+      initContact();
+      initSkillWave();
+      initFluid();
+      initAsterisk();
+      initSiteGlitch();
+    });
+  </script>
+</body>
+</html>
