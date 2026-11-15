@@ -122,7 +122,18 @@
       justify-content: center;
       overflow: hidden;
     }
-    .loader-inner { display: flex; flex-direction: column; align-items: center; gap: 2.5rem; }
+    .loader-inner { display: flex; flex-direction: column; align-items: center; gap: 2.5rem; position: relative; z-index: 1; }
+
+    /* Wand canvas — sits behind the loader type, the slot the katana takes
+       on the reference site. */
+    #wand-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
     .loader-name { display: flex; flex-direction: column; align-items: center; line-height: 0.9; }
     .loader-name-line {
       display: block;
@@ -169,7 +180,7 @@
     }
 
     /* ============================================
-       WOLF MASK CANVAS
+       SORTING HAT CANVAS
        ============================================ */
     #mask-canvas {
       position: fixed;
@@ -240,7 +251,7 @@
       justify-content: flex-end;
       align-items: flex-end;
       gap: var(--space-sm);
-      padding-bottom: 5rem;
+      padding-bottom: 8rem;
       padding-left: var(--space-md);
       border-left: 2px solid #000;
       z-index: 1;
@@ -479,8 +490,17 @@
     .contact-social { display: flex; align-items: center; color: var(--color-text-muted); transition: color 0.3s ease, transform 0.25s var(--ease-out); }
     .contact-social:hover { color: var(--color-text); transform: scale(1.15); }
     .contact-social svg { display: block; }
-    .contact-footer { display: flex; justify-content: center; border-top: 1px solid var(--color-border); padding-top: var(--space-sm); }
+    .contact-footer { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; border-top: 1px solid var(--color-border); padding-top: var(--space-sm); }
     .contact-footer span { font-family: var(--font-mono); font-size: var(--text-caption); letter-spacing: 0.2em; color: var(--color-text-muted); text-transform: uppercase; }
+    .contact-credit {
+      font-family: var(--font-mono);
+      font-size: calc(var(--text-caption) * 0.86);
+      letter-spacing: 0.16em;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+    .contact-credit a { color: inherit; text-decoration: none; border-bottom: 1px solid currentColor; }
 
     /* Contact — inverted (when education flips, contact flips too) */
     #contact.is-inverted { background: #F5F2EB; border-top-color: #F5F2EB; }
@@ -494,6 +514,7 @@
     #contact.is-inverted .contact-social:hover { color: #0A0A0E; }
     #contact.is-inverted .contact-footer { border-top-color: #D0CCC2; }
     #contact.is-inverted .contact-footer span { color: #8A8880; }
+    #contact.is-inverted .contact-credit { color: #8A8880; }
 
     /* ============================================
        REVEAL
@@ -548,7 +569,7 @@
 
   <div class="cursor" id="cursor" aria-hidden="true"></div>
 
-  <!-- Wolf mask canvas (fixed, centre) -->
+  <!-- Sorting hat canvas (fixed, centre) -->
   <canvas id="mask-canvas" aria-hidden="true"></canvas>
 
   <!-- Slash overlay -->
@@ -560,6 +581,7 @@
 
   <!-- ==================== LOADER ==================== -->
   <div id="loader" role="status" aria-label="Loading">
+    <canvas id="wand-canvas" aria-hidden="true"></canvas>
     <div class="loader-inner">
       <div class="loader-name">
         <span class="loader-name-line" data-text="ARKAPRAVA"></span>
@@ -852,6 +874,7 @@
 
         <div class="contact-footer">
           <span>CRAFTED WITH ❤️ | DEEPSEEK × OPENCODE</span>
+          <div class="contact-credit">SORTING HAT — MESHY (CC0) &nbsp;·&nbsp; WAND — <a href="https://sketchfab.com/Xeriesart" target="_blank" rel="noopener">XERIESART</a> (CC BY)</div>
         </div>
       </div>
     </section>
@@ -869,6 +892,98 @@
     import { MeshoptDecoder } from 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/meshopt_decoder.module.js';
 
     gsap.registerPlugin(ScrollTrigger);
+
+    /* ============================================================
+       WAND — Three.js scene in the loader, katana-style rise
+       ============================================================ */
+    const WAND_RISE_DURATION = 1.9;
+    const wandState = { started: false, progress: 0, ready: false, failed: false };
+
+    function initWand() {
+      const canvas = document.getElementById('wand-canvas');
+      if (!canvas) { wandState.failed = true; return; }
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+      camera.position.set(0, 0, 9);
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.8;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+      function syncSize() {
+        const w = window.innerWidth, h = window.innerHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h, false);
+      }
+      syncSize();
+      window.addEventListener('resize', syncSize);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+      const keyLight = new THREE.DirectionalLight(0xffffff, 5); keyLight.position.set(3, 5, 4); scene.add(keyLight);
+      const rimLight = new THREE.DirectionalLight(0x99bbff, 3); rimLight.position.set(-4, 2, 2); scene.add(rimLight);
+      const frontFill = new THREE.DirectionalLight(0xffffff, 1.8); frontFill.position.set(-1, 0, 6); scene.add(frontFill);
+      const redFill = new THREE.PointLight(0xff1919, 1.1, 14); redFill.position.set(0, -4, 3.5); scene.add(redFill);
+
+      (function tick() {
+        requestAnimationFrame(tick);
+        // The loader is removed after the cut — stop drawing into a hidden canvas.
+        if (canvas.offsetParent === null) return;
+        renderer.render(scene, camera);
+      })();
+
+      const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
+
+      loader.load('assets/models/draco_malfoys_wand.glb', gltf => {
+        const wandGroup = gltf.scene;
+
+        // Fit the longest axis (the wand's Z) to 7 world units, centred.
+        const box = new THREE.Box3().setFromObject(wandGroup);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const scale = 7.0 / Math.max(size.x, size.y, size.z);
+        wandGroup.scale.setScalar(scale);
+        wandGroup.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+
+        wandGroup.traverse(c => {
+          if (!c.isMesh) return;
+          c.material.transparent = true;
+          c.material.opacity = 0;
+          c.frustumCulled = false;
+        });
+
+        // Pivot stands the wand upright: its long axis is +Z, tip pointing up.
+        const pivot = new THREE.Group();
+        pivot.rotation.set(-Math.PI / 2, 0, 0);
+        pivot.position.y = -9;
+        pivot.add(wandGroup);
+        scene.add(pivot);
+
+        wandState.started = true;
+
+        // Fade in as it climbs out of the dark.
+        wandGroup.traverse(c => {
+          if (c.isMesh) gsap.to(c.material, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+        });
+
+        // Rise from below the frame to centre — the katana's beat.
+        gsap.fromTo(pivot.position, { y: -9 }, {
+          y: 0, duration: WAND_RISE_DURATION, ease: 'power3.out',
+          onUpdate() { wandState.progress = this.progress(); },
+          onComplete() { wandState.progress = 1; wandState.ready = true; },
+        });
+
+        // Settle upright: a slight lean that straightens as it arrives.
+        gsap.fromTo(pivot.rotation, { z: 0.16 }, { z: 0, duration: WAND_RISE_DURATION, ease: 'power3.out' });
+      }, undefined, err => {
+        console.warn('wand.glb failed:', err);
+        wandState.failed = true;
+      });
+    }
 
     /* ============================================================
        LOADER + SLASH
@@ -890,16 +1005,35 @@
       const counter = document.getElementById('loader-counter');
       const loader = document.getElementById('loader');
       let pct = 0;
+      let fired = false;
 
-      const timer = setInterval(() => {
-        pct = Math.min(100, pct + Math.random() * 13 + 5);
-        fill.style.transform = 'scaleX(' + (pct / 100) + ')';
+      initWand();
+
+      function setPct(v) {
+        pct = Math.min(100, Math.max(pct, v));
+        fill.style.transform = 'scaleX(' + (pct / 100).toFixed(4) + ')';
         counter.textContent = Math.floor(pct) + '%';
-        if (pct >= 100) {
-          clearInterval(timer);
-          setTimeout(() => slashReveal(), 300);
+      }
+
+      // The bar is now honest: it climbs to 55% while the GLB streams in,
+      // then rides the wand's rise the rest of the way.
+      function track() {
+        if (fired) return;
+
+        if (wandState.ready || wandState.failed) {
+          // Rise is done — land the bar, then cut.
+          setPct(Math.min(100, pct + 2.5));
+          if (pct < 100) { requestAnimationFrame(track); return; }
+          fired = true;
+          setTimeout(slashReveal, 200);
+          return;
         }
-      }, 130);
+
+        const target = wandState.started ? 58 + wandState.progress * 42 : 55;
+        setPct(pct + (target - pct) * 0.16);
+        requestAnimationFrame(track);
+      }
+      track();
 
       function slashReveal() {
         const overlay = document.getElementById('slash-overlay');
@@ -986,7 +1120,7 @@
     }
 
     /* ============================================================
-       MASK — cat GLB, mouse-tracking, scroll exit, glitch swap
+       HAT — sorting hat GLB, mouse-tracking, scroll exit, glitch
        ============================================================ */
     function initMask() {
       const canvas = document.getElementById('mask-canvas');
@@ -1081,19 +1215,22 @@
       const loader = new GLTFLoader();
       loader.setMeshoptDecoder(MeshoptDecoder);
 
-      loader.load('assets/models/mask.glb', gltf => {
+      loader.load('assets/models/sorting-hat.glb', gltf => {
         maskGroup = gltf.scene;
-        fitModel(maskGroup, 2.4);
+        fitModel(maskGroup, 2.55);
         maskGroup.traverse(c => { if (c.isMesh) { c.material.transparent = true; c.material.opacity = 0; } });
         scene.add(maskGroup);
         setTimeout(() => {
           maskGroup.traverse(c => { if (c.isMesh) gsap.to(c.material, { opacity: 1, duration: 1.4, ease: 'power2.out' }); });
           setTimeout(glitchLoop, 5000);
         }, 400);
-      }, undefined, err => console.warn('mask.glb failed:', err));
+      }, undefined, err => console.warn('sorting-hat.glb failed:', err));
 
       function tick() {
         requestAnimationFrame(tick);
+        // Skip the draw when the hero has scrolled the hat off-screen.
+        const r = canvas.getBoundingClientRect();
+        if (r.bottom < -40 || r.top > window.innerHeight + 40) return;
         if (maskGroup) {
           cur.ry += (mouse.x * MAX_RY - cur.ry) * LERP;
           cur.rx += (mouse.y * MAX_RX - cur.rx) * LERP;

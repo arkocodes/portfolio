@@ -1,6 +1,9 @@
-# Local-only — never deployed
+# Local-only, never deployed
 arkaprava_cv.pdf
 serve.cmd
+
+# Uncompressed model masters (too large to deploy)
+_source/
 
 # OS / editor junk
 .DS_Store
